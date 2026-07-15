@@ -85,9 +85,9 @@ function Select({
 }) {
   return (
     <label className="block min-w-0">
-      <span className="text-sm font-medium text-slate-700">{label}</span>
+      <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</span>
       <select
-        className="mt-2 h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+        className="mt-1.5 h-10 w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm outline-none transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 hover:border-slate-300"
         onChange={(event) => onChange(name, event.target.value)}
         value={value}
       >
