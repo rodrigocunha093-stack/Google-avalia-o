@@ -85,13 +85,6 @@ select {
   vertical-align: top;
 }
 
-.map-grid {
-  background-image:
-    linear-gradient(rgb(15 23 42 / 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(15 23 42 / 0.08) 1px, transparent 1px);
-  background-size: 32px 32px;
-}
-
 .theme-chip,
 .theme-chip-active,
 .theme-chip-clear {

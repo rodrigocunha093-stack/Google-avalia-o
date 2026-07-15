@@ -84,6 +84,16 @@ describe("dashboard", () => {
     expect(dashboard.themeDecisionReport.every((item) => item.negativeComments >= 0)).toBe(true);
   });
 
+  it("gera matriz territorial de decisao por loja", () => {
+    const dashboard = getDemoDashboard({});
+
+    expect(dashboard.storeDecisionReport).toHaveLength(dashboard.stores.length);
+    expect(dashboard.storeDecisionReport[0]?.score).toBeGreaterThanOrEqual(
+      dashboard.storeDecisionReport.at(-1)?.score ?? 0,
+    );
+    expect(dashboard.storeDecisionReport.some((store) => store.priority === "Alta")).toBe(true);
+  });
+
   it("inclui avaliacoes de menor classificacao para Altiplano", () => {
     const dashboard = getDemoDashboard({ store: "altiplano" });
 

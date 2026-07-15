@@ -41,6 +41,7 @@ export function getDemoDashboard(filters: {
   const actionPlan = simulatedActionPlan.filter((item) => !filters.theme || item.theme === filters.theme);
   const actionCommandCenter = buildActionCommandCenter(actionPlan, reviewSamples);
   const themeDecisionReport = buildThemeDecisionReport(availableReviews);
+  const storeDecisionReport = buildStoreDecisionReport(stores);
 
   return {
     stores,
@@ -51,6 +52,7 @@ export function getDemoDashboard(filters: {
     actionPlan,
     actionCommandCenter,
     themeDecisionReport,
+    storeDecisionReport,
     ratingTrend: getSimulatedRatingTrend(ratingPeriod, filters.store),
     ratingPeriod,
     futureWeeklyReport: simulatedConnectedMetrics,
@@ -247,6 +249,43 @@ function buildThemeDecisionReport(reviews: PublicReviewSample[]) {
     })
     .sort((a, b) => b.score - a.score || b.negativeComments - a.negativeComments || a.theme.localeCompare(b.theme))
     .slice(0, 8);
+}
+
+function buildStoreDecisionReport(stores: PublicStore[]) {
+  return stores
+    .map((store) => {
+      const negativeReviews = store.reviews.filter((review) => review.rating <= 2);
+      const criticalTheme = mostFrequent(identifyThemes(negativeReviews.map((review) => review.text))) ?? "Sem critico";
+      const score = negativeReviews.length * 35 + store.userRatingCount / 250 + (store.rating < 4.3 ? 20 : 0) + themeRiskWeight(criticalTheme);
+      return {
+        id: store.id,
+        slug: store.slug,
+        name: store.displayName,
+        neighborhood: store.neighborhood,
+        rating: store.rating,
+        reviews: store.userRatingCount,
+        negativeComments: negativeReviews.length,
+        criticalTheme,
+        score: Math.round(score),
+        priority: score >= 90 || negativeReviews.length >= 4 ? "Alta" : score >= 55 ? "Media" : "Baixa",
+        decision: storeDecision(criticalTheme, negativeReviews.length),
+      };
+    })
+    .sort((a, b) => b.score - a.score || b.negativeComments - a.negativeComments);
+}
+
+function storeDecision(theme: string, negativeComments: number) {
+  if (!negativeComments) return "Monitorar reputacao e manter rotina atual.";
+  const decisions: Record<string, string> = {
+    Validade: "Auditoria imediata de pereciveis, validade e retirada de produto improprio.",
+    Higiene: "Checklist de limpeza, evidencia fotografica e revisao de rotina por turno.",
+    Carnes: "Revisar cadeia fria, lote, armazenamento e devolucao no setor de carnes.",
+    Seguranca: "Revisar abordagem, cameras, ronda e protocolo de ocorrencias.",
+    Filas: "Rever escala de caixas e tempo maximo de espera por faixa horaria.",
+    Preco: "Auditar etiqueta, leitor, oferta e divergencia no caixa.",
+    Frios: "Revisar rotulagem, manipulacao e conferencia do balcao de frios.",
+  };
+  return decisions[theme] ?? "Definir responsavel, prazo e evidencia para o principal ponto critico.";
 }
 
 function themeRiskWeight(theme: string) {

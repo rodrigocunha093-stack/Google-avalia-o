@@ -244,26 +244,44 @@ export default async function Home({
 
           <section className="grid gap-6 lg:grid-cols-[1fr_360px]">
             <div className="panel">
-              <div className="mb-4 flex items-center gap-2">
+              <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                <div className="flex items-center gap-2">
                 <MapPinned size={19} />
-                <h2 className="text-xl font-semibold">Mapa das unidades</h2>
+                  <h2 className="text-xl font-semibold">Matriz territorial de decisao</h2>
+                </div>
+                <Badge tone="real">Dados acessados</Badge>
               </div>
-              <div className="relative min-h-[420px] overflow-hidden rounded-md border border-slate-200 bg-[#dde9df]">
-                <div className="absolute inset-0 map-grid" />
-                {dashboard.stores.map((store, index) => (
+              <p className="mb-4 text-sm leading-6 text-slate-600">
+                Substitui o mapa decorativo por uma leitura operacional: quais lojas concentram maior risco nos comentarios acessados e qual decisao tomar primeiro.
+              </p>
+              <div className="space-y-3">
+                {dashboard.storeDecisionReport.map((store, index) => (
                   <Link
-                    className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-semibold shadow-sm ring-1 ring-slate-200 hover:ring-emerald-400"
+                    className="block rounded-md border border-slate-200 p-3 hover:border-emerald-300 hover:bg-emerald-50/40"
                     href={`/lojas/${store.slug}`}
                     key={store.id}
-                    style={{
-                      left: `${20 + ((index * 17) % 60)}%`,
-                      top: `${24 + ((index * 23) % 54)}%`,
-                    }}
                   >
-                    <span className="grid size-6 place-items-center rounded-full bg-emerald-700 text-white">
-                      {index + 1}
-                    </span>
-                    {store.neighborhood}
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="grid size-7 place-items-center rounded-full bg-emerald-700 text-xs font-semibold text-white">
+                            {index + 1}
+                          </span>
+                          <strong className="text-sm text-slate-950">{store.neighborhood}</strong>
+                        </div>
+                        <p className="mt-2 text-xs leading-5 text-slate-600">{store.name}</p>
+                      </div>
+                      <Badge tone={store.priority === "Alta" ? "real" : "neutral"}>{store.priority}</Badge>
+                    </div>
+                    <div className="mt-3 grid gap-2 text-xs text-slate-600 sm:grid-cols-4">
+                      <span>Score: <strong className="text-slate-950">{store.score}</strong></span>
+                      <span>Nota: <strong className="text-slate-950">{formatRating(store.rating)}</strong></span>
+                      <span>Negativos: <strong className="text-slate-950">{store.negativeComments}</strong></span>
+                      <span>Tema: <strong className="text-slate-950">{store.criticalTheme}</strong></span>
+                    </div>
+                    <p className="mt-3 rounded-md bg-slate-50 p-2 text-xs leading-5 text-slate-700">
+                      {store.decision}
+                    </p>
                   </Link>
                 ))}
               </div>
