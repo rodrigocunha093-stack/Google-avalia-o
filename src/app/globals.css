@@ -121,3 +121,48 @@ select {
   background: #fff7ed;
   color: #9a3412;
 }
+
+.tab-link,
+.tab-active {
+  display: flex;
+  min-height: 5rem;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.35rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.tab-link {
+  background: #f8fafc;
+  color: #334155;
+}
+
+.tab-link:hover {
+  border-color: #047857;
+  color: #065f46;
+}
+
+.tab-active {
+  border-color: #047857;
+  background: #047857;
+  color: #ffffff;
+}
+
+.tab-link span,
+.tab-active span {
+  font-size: 0.875rem;
+  font-weight: 800;
+}
+
+.tab-link small,
+.tab-active small {
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.tab-active small {
+  color: #d1fae5;
+}

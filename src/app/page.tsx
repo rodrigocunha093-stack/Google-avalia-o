@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  AlertTriangle,
   ArrowUpRight,
   Building2,
   ClipboardCheck,
@@ -21,6 +20,15 @@ import { getDemoDashboard } from "@/lib/dashboard";
 import { formatNumber, formatRating } from "@/lib/format";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+type TabKey = "resumo" | "fazer" | "porque" | "percepcao" | "detalhado";
+
+const tabs: { key: TabKey; label: string; description: string }[] = [
+  { key: "resumo", label: "Resumo Executivo", description: "lojas criticas, temas criticos, risco e impacto" },
+  { key: "fazer", label: "O Que Fazer Agora", description: "acao, prioridade, responsavel, prazo e evidencia" },
+  { key: "porque", label: "Por Que Fazer", description: "comentarios de origem, frequencia e recorrencia" },
+  { key: "percepcao", label: "Como o Cliente Enxerga", description: "percepcao por tema, pontos fortes e criticos" },
+  { key: "detalhado", label: "Relatorio Detalhado", description: "comentarios, historico, respostas e evolucao" },
+];
 
 export default async function Home({
   searchParams,
@@ -28,6 +36,7 @@ export default async function Home({
   searchParams: SearchParams;
 }) {
   const params = await searchParams;
+  const activeTab = parseTab(asString(params.tab));
   const dashboard = getDemoDashboard({
     store: asString(params.store),
     bairro: asString(params.bairro),
@@ -70,36 +79,11 @@ export default async function Home({
       </section>
 
       <section className="mx-auto grid max-w-7xl gap-5 px-4 py-6 sm:px-6 lg:grid-cols-5 lg:px-8">
-        <MetricCard
-          icon={<Building2 size={20} />}
-          label="Unidades encontradas"
-          value={dashboard.summary.unitsFound.toString()}
-          badge="Dado publico informado"
-        />
-        <MetricCard
-          icon={<Star size={20} />}
-          label="Nota media ponderada"
-          value={formatRating(dashboard.summary.weightedAverageRating)}
-          badge="Dado publico informado"
-        />
-        <MetricCard
-          icon={<MessageSquareText size={20} />}
-          label="Total publico de avaliacoes"
-          value={formatNumber(dashboard.summary.totalReviews)}
-          badge="Dado publico informado"
-        />
-        <MetricCard
-          icon={<TrendingUp size={20} />}
-          label="Melhor nota"
-          value={dashboard.summary.bestRated?.displayName ?? "-"}
-          badge={formatRating(dashboard.summary.bestRated?.rating)}
-        />
-        <MetricCard
-          icon={<MapPinned size={20} />}
-          label="Maior volume"
-          value={dashboard.summary.mostReviewed?.displayName ?? "-"}
-          badge={`${formatNumber(dashboard.summary.mostReviewed?.userRatingCount ?? 0)} avaliacoes`}
-        />
+        <MetricCard icon={<Building2 size={20} />} label="Unidades encontradas" value={dashboard.summary.unitsFound.toString()} badge="Dado real acessado" />
+        <MetricCard icon={<Star size={20} />} label="Nota media ponderada" value={formatRating(dashboard.summary.weightedAverageRating)} badge="Dado real acessado" />
+        <MetricCard icon={<MessageSquareText size={20} />} label="Total publico de avaliacoes" value={formatNumber(dashboard.summary.totalReviews)} badge="Dado real acessado" />
+        <MetricCard icon={<TrendingUp size={20} />} label="Melhor nota" value={dashboard.summary.bestRated?.displayName ?? "-"} badge={formatRating(dashboard.summary.bestRated?.rating)} />
+        <MetricCard icon={<MapPinned size={20} />} label="Maior volume" value={dashboard.summary.mostReviewed?.displayName ?? "-"} badge={`${formatNumber(dashboard.summary.mostReviewed?.userRatingCount ?? 0)} avaliacoes`} />
       </section>
 
       <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[320px_1fr] lg:px-8">
@@ -118,415 +102,531 @@ export default async function Home({
         </aside>
 
         <div className="space-y-6">
-          <section className="panel border-emerald-200 bg-emerald-50/30">
-            <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-              <div className="max-w-4xl">
-                <Badge tone="real">Painel de decisao</Badge>
-                <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
-                  O que a rede deve resolver primeiro
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-slate-700">
-                  {dashboard.executiveDecision.mission} Os comentarios ficam como fonte primaria e evidencia; a tela principal mostra a decisao.
-                </p>
-              </div>
-              <Link className="btn-primary" href={hrefWithParams(params, { reviewTone: "negativas", theme: dashboard.executiveDecision.primaryTheme })}>
-                Ver evidencias
-                <ArrowUpRight size={16} />
-              </Link>
-            </div>
+          <TabNavigation activeTab={activeTab} params={params} />
 
-            <div className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
-              <div className="rounded-md border border-emerald-200 bg-white p-4">
-                <p className="text-xs font-semibold uppercase text-emerald-800">Acao recomendada agora</p>
-                <h3 className="mt-2 text-lg font-semibold leading-7 text-slate-950">
-                  {dashboard.executiveDecision.primaryAction}
-                </h3>
-                <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-                  <DecisionMiniCard label="Tema critico" value={dashboard.executiveDecision.primaryTheme} />
-                  <DecisionMiniCard label="Loja em foco" value={dashboard.executiveDecision.primaryStore} />
-                  <DecisionMiniCard label="Evidencias negativas" value={dashboard.executiveDecision.evidenceCount.toString()} />
-                </div>
-              </div>
+          {activeTab === "resumo" && (
+            <div className="space-y-6">
+              <ExecutiveDecisionPanel dashboard={dashboard} params={params} />
 
-              <div className="rounded-md border border-slate-200 bg-white p-4">
-                <p className="text-xs font-semibold uppercase text-slate-500">Como o cliente enxerga</p>
-                <p className="mt-2 text-sm leading-6 text-slate-700">{dashboard.executiveDecision.customerView}</p>
-                <p className="mt-4 rounded-md bg-slate-50 p-3 text-sm leading-6 text-slate-700">
-                  Base da prioridade: {dashboard.executiveDecision.whyItMatters}
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <section className="panel">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-semibold">Comparativo das lojas</h2>
-                <p className="text-sm text-slate-600">
-                  Dados reais acessados/informados para a demonstracao; confirmar via Places API, Google Business Profile ou importacao oficial antes de producao.
-                </p>
-              </div>
-              <Badge tone="real">Dado real acessado</Badge>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Unidade</th>
-                    <th>Bairro</th>
-                    <th>Nota</th>
-                    <th>Avaliacoes</th>
-                    <th>Status</th>
-                    <th>Maps</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dashboard.stores.map((store) => (
-                    <tr key={store.id}>
-                      <td>
-                        <Link className="font-semibold text-emerald-800 hover:underline" href={`/lojas/${store.slug}`}>
-                          {store.displayName}
-                        </Link>
-                        <div className="text-xs text-slate-500">{store.placeId}</div>
-                      </td>
-                      <td>{store.neighborhood}</td>
-                      <td>{formatRating(store.rating)}</td>
-                      <td>{formatNumber(store.userRatingCount)}</td>
-                      <td>{store.businessStatus}</td>
-                      <td>
-                        <a className="text-emerald-800 hover:underline" href={store.googleMapsUri} rel="noreferrer" target="_blank">
-                          Abrir
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section className="panel">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-semibold">Nota por periodo real</h2>
-                <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
-                  Este grafico foi retirado da visao principal porque nao existe historico real por semana, mes ou ano nos dados acessados agora. Ele sera exibido somente apos autorizacao do Google Business Profile ou importacao oficial com datas das avaliacoes.
-                </p>
-              </div>
-              <Badge tone="authorized">Disponivel apos autorizacao</Badge>
-            </div>
-          </section>
-
-          <section className="panel border-emerald-100 bg-white">
-            <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Flame className="text-emerald-800" size={20} />
-                  <h2 className="text-xl font-semibold">Central de acao gerencial</h2>
-                </div>
-                <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
-                  Priorizacao operacional gerada a partir dos comentarios acessados/importados nesta demonstracao. As acoes sao recomendacoes do sistema; os fatos destacados vêm dos dados acessados.
-                </p>
-              </div>
-              <Badge tone="real">Analise dos dados acessados</Badge>
-            </div>
-
-            <div className="grid gap-3 md:grid-cols-4">
-              <ActionMetric label="Acoes criticas" value={dashboard.actionCommandCenter.criticalActions.toString()} />
-              <ActionMetric label="Prazos da semana" value={dashboard.actionCommandCenter.dueSoonActions.toString()} />
-              <ActionMetric label="Reclamacoes triadas" value={dashboard.actionCommandCenter.negativeFeedbacks.toString()} />
-              <ActionMetric label="Tema de maior risco" value={dashboard.actionCommandCenter.topRiskTheme} />
-            </div>
-
-            <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_340px]">
-              <div className="overflow-x-auto rounded-md border border-slate-200">
-                <div className="min-w-[760px]">
-                  <div className="grid grid-cols-[72px_1fr_120px_120px_130px] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase text-slate-500">
-                    <span>Score</span>
-                    <span>Tema e origem</span>
-                    <span>SLA</span>
-                    <span>Status</span>
-                    <span>Reclamacoes</span>
-                  </div>
-                  {dashboard.actionCommandCenter.actionQueue.map((item) => (
-                    <div className="grid grid-cols-[72px_1fr_120px_120px_130px] gap-3 border-t border-slate-200 px-4 py-3 text-sm" key={item.id}>
-                      <strong className="text-emerald-800">{item.score}</strong>
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-semibold text-slate-950">{item.theme}</span>
-                        <Badge tone={item.priority === "Alta" ? "real" : "neutral"}>{item.priority}</Badge>
-                        </div>
-                        <p className="mt-1 leading-6 text-slate-700">{item.action}</p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {item.storesAffected} loja(s) afetada(s) · {item.negativeComments} reclamacao(oes) de origem
-                        </p>
-                        <ul className="mt-2 space-y-1 text-xs leading-5 text-slate-600">
-                          {item.evidence.map((evidence) => (
-                            <li key={evidence}>Evidencia: {evidence}</li>
-                          ))}
-                        </ul>
-                        <p className="mt-2 text-xs text-slate-500">Dono: {item.owner}</p>
-                      </div>
-                      <span className="text-slate-700">{item.dueIn}</span>
-                      <span className="font-medium text-slate-800">{item.stage}</span>
-                      <Link className="font-semibold text-emerald-800 hover:underline" href={hrefWithParams(params, { reviewTone: "negativas", theme: item.theme })}>
-                        Ver origem
-                      </Link>
+              <section className="grid gap-6 lg:grid-cols-[1fr_380px]">
+                <div className="panel">
+                  <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h2 className="text-xl font-semibold">Lojas criticas e risco por loja</h2>
+                      <p className="mt-1 text-sm leading-6 text-slate-600">
+                        Ranking territorial por risco calculado com nota, volume publico, comentarios negativos acessados e tema critico.
+                      </p>
                     </div>
-                  ))}
+                    <Badge tone="real">Dados acessados</Badge>
+                  </div>
+                  <StoreDecisionList stores={dashboard.storeDecisionReport.slice(0, 5)} />
                 </div>
-              </div>
 
-              <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-4">
-                <div className="mb-3 flex items-center gap-2">
-                  <ClipboardCheck size={18} />
-                  <h3 className="font-semibold">Ritual semanal recomendado</h3>
+                <div className="panel">
+                  <h2 className="text-xl font-semibold">Prioridade da semana</h2>
+                  <div className="mt-4 space-y-3">
+                    <DecisionMiniCard label="Tema critico" value={dashboard.executiveDecision.primaryTheme} />
+                    <DecisionMiniCard label="Loja em foco" value={dashboard.executiveDecision.primaryStore} />
+                    <DecisionMiniCard label="Impacto potencial" value={dashboard.executiveDecision.whyItMatters} />
+                  </div>
                 </div>
-                <ol className="space-y-2 text-sm leading-6 text-slate-700">
-                  {dashboard.actionCommandCenter.weeklyRitual.map((step, index) => (
-                    <li className="flex gap-2" key={step}>
-                      <span className="grid size-6 shrink-0 place-items-center rounded-full bg-emerald-700 text-xs font-semibold text-white">
-                        {index + 1}
-                      </span>
-                      <span>{step}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
+              </section>
+
+              <ThemeDecisionTable items={dashboard.themeDecisionReport.slice(0, 5)} title="Temas criticos" />
             </div>
-          </section>
+          )}
 
-          <section className="grid gap-6 lg:grid-cols-[1fr_360px]">
-            <div className="panel">
-              <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-                <div className="flex items-center gap-2">
-                <MapPinned size={19} />
-                  <h2 className="text-xl font-semibold">Matriz territorial de decisao</h2>
+          {activeTab === "fazer" && (
+            <div className="space-y-6">
+              <section className="panel border-emerald-100 bg-white">
+                <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Flame className="text-emerald-800" size={20} />
+                      <h2 className="text-xl font-semibold">O Que Fazer Agora</h2>
+                    </div>
+                    <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
+                      Acoes agrupadas por tema, sem duplicidade visual, com prioridade, responsavel, prazo e evidencia de origem.
+                    </p>
+                  </div>
+                  <Badge tone="real">Analise dos dados acessados</Badge>
                 </div>
-                <Badge tone="real">Dados acessados</Badge>
-              </div>
-              <p className="mb-4 text-sm leading-6 text-slate-600">
-                Substitui o mapa decorativo por uma leitura operacional: quais lojas concentram maior risco nos comentarios acessados e qual decisao tomar primeiro.
-              </p>
-              <div className="space-y-3">
-                {dashboard.storeDecisionReport.map((store, index) => (
-                  <Link
-                    className="block rounded-md border border-slate-200 p-3 hover:border-emerald-300 hover:bg-emerald-50/40"
-                    href={`/lojas/${store.slug}`}
-                    key={store.id}
-                  >
+
+                <div className="grid gap-3 md:grid-cols-4">
+                  <ActionMetric label="Acoes criticas" value={dashboard.actionCommandCenter.criticalActions.toString()} />
+                  <ActionMetric label="Prazos da semana" value={dashboard.actionCommandCenter.dueSoonActions.toString()} />
+                  <ActionMetric label="Reclamacoes triadas" value={dashboard.actionCommandCenter.negativeFeedbacks.toString()} />
+                  <ActionMetric label="Tema de maior risco" value={dashboard.actionCommandCenter.topRiskTheme} />
+                </div>
+
+                <ActionQueue items={dashboard.actionCommandCenter.actionQueue} params={params} />
+              </section>
+
+              <section className="grid gap-6 lg:grid-cols-[1fr_380px]">
+                <ActionPlanList items={dashboard.actionPlan} />
+                <WeeklyRitual steps={dashboard.actionCommandCenter.weeklyRitual} />
+              </section>
+            </div>
+          )}
+
+          {activeTab === "porque" && (
+            <div className="space-y-6">
+              <section className="grid gap-6 lg:grid-cols-[1fr_380px]">
+                <ReviewEvidencePanel
+                  params={params}
+                  reviewSamples={dashboard.reviewSamples}
+                  reviewTone={reviewTone}
+                  selectedTheme={selectedTheme}
+                />
+                <section className="panel">
+                  <h2 className="text-xl font-semibold">Por Que Fazer</h2>
+                  <div className="mt-4 space-y-3">
+                    <DecisionMiniCard label="Tema detectado" value={dashboard.executiveDecision.primaryTheme} />
+                    <DecisionMiniCard label="Frequencia" value={dashboard.executiveDecision.whyItMatters} />
+                    <DecisionMiniCard label="Recorrencia por loja" value={`${dashboard.themeDecisionReport[0]?.affectedStores ?? 0} loja(s) afetada(s)`} />
+                  </div>
+                </section>
+              </section>
+
+              <ThemeDecisionTable items={dashboard.themeDecisionReport} title="Frequencia, nota e recorrencia por tema" showAverage />
+            </div>
+          )}
+
+          {activeTab === "percepcao" && (
+            <div className="space-y-6">
+              <section className="grid gap-6 lg:grid-cols-2">
+                <section className="panel">
+                  <h2 className="text-xl font-semibold">Como o Cliente Está Enxergando A Loja</h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    {dashboard.executiveDecision.customerView}
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {dashboard.themes.map((theme) => (
+                      <Link className={theme === selectedTheme ? "theme-chip-active" : "theme-chip"} href={hrefWithParam(params, "theme", theme)} key={theme}>
+                        {theme}
+                      </Link>
+                    ))}
+                    {selectedTheme && <Link className="theme-chip-clear" href={hrefWithoutParams(params, ["theme", "reviewTone"])}>Todos</Link>}
+                  </div>
+                </section>
+
+                <section className="panel">
+                  <h2 className="text-xl font-semibold">Pontos fortes e pontos criticos</h2>
+                  <div className="mt-4 grid gap-3">
+                    <DecisionMiniCard label="Ponto critico principal" value={dashboard.executiveDecision.primaryTheme} />
+                    <DecisionMiniCard label="Loja mais sensivel" value={dashboard.executiveDecision.primaryStore} />
+                    <DecisionMiniCard label="Ponto forte publico" value={dashboard.summary.bestRated?.displayName ?? "-"} />
+                  </div>
+                </section>
+              </section>
+
+              <section className="grid gap-6 lg:grid-cols-[1fr_380px]">
+                <section className="panel">
+                  <h2 className="text-xl font-semibold">Comparacao entre lojas</h2>
+                  <StoreComparisonTable stores={dashboard.stores} />
+                </section>
+                <section className="panel">
+                  <h2 className="text-xl font-semibold">Matriz territorial</h2>
+                  <StoreDecisionList stores={dashboard.storeDecisionReport.slice(0, 4)} />
+                </section>
+              </section>
+            </div>
+          )}
+
+          {activeTab === "detalhado" && (
+            <div className="space-y-6">
+              <section className="grid gap-6 lg:grid-cols-[1fr_380px]">
+                <ReviewEvidencePanel
+                  params={params}
+                  reviewSamples={dashboard.reviewSamples}
+                  reviewTone={reviewTone}
+                  selectedTheme={selectedTheme}
+                />
+                <section className="space-y-6">
+                  <section className="panel">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <div className="flex items-center gap-2">
-                          <span className="grid size-7 place-items-center rounded-full bg-emerald-700 text-xs font-semibold text-white">
-                            {index + 1}
-                          </span>
-                          <strong className="text-sm text-slate-950">{store.neighborhood}</strong>
-                        </div>
-                        <p className="mt-2 text-xs leading-5 text-slate-600">{store.name}</p>
+                        <h2 className="text-xl font-semibold">Historico e respostas</h2>
+                        <p className="mt-1 text-sm leading-6 text-slate-600">
+                          Historico completo, respostas ao cliente e status de pendencia dependem de autorizacao Google Business Profile ou importacao oficial.
+                        </p>
                       </div>
-                      <Badge tone={store.priority === "Alta" ? "real" : "neutral"}>{store.priority}</Badge>
+                      <Badge tone="authorized">Apos autorizacao</Badge>
                     </div>
-                    <div className="mt-3 grid gap-2 text-xs text-slate-600 sm:grid-cols-4">
-                      <span>Score: <strong className="text-slate-950">{store.score}</strong></span>
-                      <span>Nota: <strong className="text-slate-950">{formatRating(store.rating)}</strong></span>
-                      <span>Negativos: <strong className="text-slate-950">{store.negativeComments}</strong></span>
-                      <span>Tema: <strong className="text-slate-950">{store.criticalTheme}</strong></span>
-                    </div>
-                    <p className="mt-3 rounded-md bg-slate-50 p-2 text-xs leading-5 text-slate-700">
-                      {store.decision}
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            </div>
+                  </section>
 
-            <div className="panel">
-              <div className="mb-4 flex items-center justify-between gap-2">
-                <h2 className="text-xl font-semibold">Comentarios reais acessados</h2>
-                <Badge tone="real">Dado real acessado</Badge>
-              </div>
-              <p className="mb-4 text-sm leading-6 text-slate-600">
-                Esta area mostra somente comentarios acessados/importados na demonstracao. Ela nao afirma conter o historico completo sem autorizacao do Google Business Profile ou importacao oficial.
-              </p>
-              {selectedTheme && (
-                <div className="mb-4 flex flex-wrap items-center gap-2 rounded-md bg-emerald-50 p-3 text-sm text-emerald-950">
-                  <span>Filtrando comentarios por tema:</span>
-                  <Badge tone="real">{selectedTheme}</Badge>
-                  {reviewTone === "negativas" && <Badge tone="real">Somente reclamacoes</Badge>}
-                  <Link className="font-semibold text-emerald-800 hover:underline" href={hrefWithoutParams(params, ["theme", "reviewTone"])}>
-                    Limpar filtro
-                  </Link>
-                </div>
-              )}
-              <div className="space-y-4">
-                {dashboard.reviewSamples.map((review) => (
-                  <article className="border-b border-slate-200 pb-4 last:border-0" key={review.id}>
-                    <div className="flex items-center justify-between gap-3">
-                      <strong className="text-sm">{review.authorName}</strong>
-                      <span className="text-sm font-semibold text-amber-700">{review.rating}/5</span>
-                    </div>
-                    <p className="mt-2 text-sm leading-6 text-slate-700">{review.text}</p>
-                  </article>
-                ))}
-                {dashboard.reviewSamples.length === 0 && (
-                  <p className="rounded-md bg-slate-50 p-4 text-sm text-slate-600">
-                    Nenhum comentario disponivel agora para este tema nos filtros atuais.
-                  </p>
-                )}
-              </div>
-            </div>
-          </section>
-
-          <section className="grid gap-6 lg:grid-cols-2">
-            <div className="panel">
-              <h2 className="text-xl font-semibold">Temas identificados nos comentarios</h2>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {dashboard.themes.map((theme) => (
-                  <Link
-                    className={theme === selectedTheme ? "theme-chip-active" : "theme-chip"}
-                    href={hrefWithParam(params, "theme", theme)}
-                    key={theme}
-                  >
-                    {theme}
-                  </Link>
-                ))}
-                {selectedTheme && (
-                  <Link className="theme-chip-clear" href={hrefWithoutParam(params, "theme")}>
-                    Todos
-                  </Link>
-                )}
-              </div>
-              <p className="mt-4 text-sm leading-6 text-slate-600">
-                Clique em um tema para filtrar os comentarios reais acessados e o plano de acao gerado a partir deles. A classificacao completa de todos os comentarios depende da autorizacao do Google Business Profile ou importacao oficial do cliente.
-              </p>
-            </div>
-            <div className="panel">
-              <div className="mb-4 flex items-center justify-between gap-2">
-                <h2 className="text-xl font-semibold">Indicadores semanais reais</h2>
-                <Badge tone="authorized">Apos autorizacao</Badge>
-              </div>
-              <div className="space-y-3 text-sm leading-6 text-slate-700">
-                <p>
-                  Os dados acessados agora nao permitem afirmar nota da semana, novas avaliacoes da semana, taxa de resposta ou pendencias reais.
-                </p>
-                <p>
-                  Esses indicadores entram quando a rede autorizar o Google Business Profile ou enviar uma importacao oficial com data, nota, texto e status de resposta.
-                </p>
-              </div>
-              <div className="mt-4 flex items-start gap-2 rounded-md bg-sky-50 p-3 text-sm text-sky-900">
-                <AlertTriangle className="mt-0.5 shrink-0" size={16} />
-                <p>Nenhum numero semanal sera apresentado sem base real acessada.</p>
-              </div>
-            </div>
-          </section>
-
-          <section className="panel">
-            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-semibold">Relatorio de tomada de decisao por tema</h2>
-                <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
-                  Prioridade calculada pelos dados acessados: comentarios negativos, quantidade de mencoes, lojas afetadas e risco operacional do tema.
-                </p>
-              </div>
-              <Badge tone="real">Dados acessados</Badge>
-            </div>
-            <div className="overflow-x-auto rounded-md border border-slate-200">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Tema</th>
-                    <th>Prioridade</th>
-                    <th>Score</th>
-                    <th>Negativos</th>
-                    <th>Mencoes</th>
-                    <th>Lojas</th>
-                    <th>Decisao recomendada</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dashboard.themeDecisionReport.map((item) => (
-                    <tr key={item.theme}>
-                      <td className="font-semibold text-slate-950">{item.theme}</td>
-                      <td>
-                        <Badge tone={item.priority === "Alta" ? "real" : "neutral"}>{item.priority}</Badge>
-                      </td>
-                      <td>{item.score}</td>
-                      <td>{item.negativeComments}</td>
-                      <td>{item.mentions}</td>
-                      <td>{item.affectedStores}</td>
-                      <td className="min-w-[280px] text-sm leading-6 text-slate-700">{item.decision}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section className="panel">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="max-w-3xl">
-                <div className="mb-3 flex items-center gap-2">
-                  <LockKeyhole className="text-emerald-800" size={19} />
-                  <h2 className="text-xl font-semibold">Todos os comentarios</h2>
-                </div>
-                <p className="text-sm leading-6 text-slate-600">
-                  Para exibir todos os comentarios reais, o sistema precisa receber os dados por uma fonte autorizada: conexao OAuth com Google Business Profile ou importacao oficial fornecida pelo cliente. Assim conseguimos listar historico completo acessivel, periodo, respostas, pendencias, temas e plano de acao sem usar scraping.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Badge tone="authorized">Disponivel apos autorizacao</Badge>
-                <Badge tone="neutral">Importacao oficial aceita</Badge>
-              </div>
-            </div>
-          </section>
-
-          <section className="grid gap-6 lg:grid-cols-[1fr_420px]">
-            <div className="panel">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <MessageSquareText size={19} />
-                  <h2 className="text-xl font-semibold">Feedbacks reais por periodo</h2>
-                </div>
-                <Badge tone="authorized">Apos autorizacao</Badge>
-              </div>
-              <p className="mb-4 text-sm leading-6 text-slate-600">
-                Os comentarios acessados nesta demonstracao nao formam uma base completa e auditavel por periodo. Por isso, a area abaixo nao inventa feedbacks da ultima semana.
-              </p>
-              <p className="rounded-md bg-slate-50 p-4 text-sm text-slate-600">
-                A lista por periodo sera preenchida somente com avaliacoes reais importadas com data. Ate la, use os comentarios acessados agora e os temas identificados como base de diagnostico.
-              </p>
-            </div>
-
-            <div className="panel">
-              <div className="mb-4 flex items-center gap-2">
-                <ListChecks size={19} />
-                <h2 className="text-xl font-semibold">Plano de acao</h2>
-              </div>
-              <div className="space-y-3">
-                {dashboard.actionPlan.map((item) => (
-                  <article className="rounded-md border border-slate-200 p-4" key={item.id}>
-                    <div className="flex items-start justify-between gap-3">
+                  <section className="panel">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                      <Badge tone={item.priority === "Alta" ? "real" : "neutral"}>{item.priority}</Badge>
-                      <h3 className="mt-3 font-semibold">{item.theme}</h3>
+                        <h2 className="text-xl font-semibold">Evolucao por periodo</h2>
+                        <p className="mt-1 text-sm leading-6 text-slate-600">
+                          Sem datas completas nao exibimos grafico semanal, mensal ou anual real.
+                        </p>
+                      </div>
+                      <Badge tone="authorized">Apos autorizacao</Badge>
                     </div>
-                      <Badge tone="real">Dados acessados</Badge>
+                  </section>
+                </section>
+              </section>
+
+              <section className="panel">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="max-w-3xl">
+                    <div className="mb-3 flex items-center gap-2">
+                      <LockKeyhole className="text-emerald-800" size={19} />
+                      <h2 className="text-xl font-semibold">Comentarios completos e acompanhamento de execucao</h2>
                     </div>
-                    <p className="mt-3 text-sm leading-6 text-slate-700">{item.action}</p>
-                    <dl className="mt-3 grid gap-2 text-xs text-slate-600">
-                      <div><dt className="font-semibold">Responsavel</dt><dd>{item.owner}</dd></div>
-                      <div><dt className="font-semibold">Prazo</dt><dd>{item.dueIn}</dd></div>
-                      <div><dt className="font-semibold">Evidencia</dt><dd>{item.evidence}</dd></div>
-                    </dl>
-                  </article>
-                ))}
-              </div>
+                    <p className="text-sm leading-6 text-slate-600">
+                      Para exibir todos os comentarios reais, respostas, pendencias e acompanhamento de execucao, o sistema precisa receber dados por OAuth do Google Business Profile ou importacao oficial.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge tone="authorized">Disponivel apos autorizacao</Badge>
+                    <Badge tone="neutral">Importacao oficial aceita</Badge>
+                  </div>
+                </div>
+              </section>
             </div>
-          </section>
+          )}
         </div>
       </section>
     </main>
+  );
+}
+
+function TabNavigation({
+  activeTab,
+  params,
+}: {
+  activeTab: TabKey;
+  params: Record<string, string | string[] | undefined>;
+}) {
+  return (
+    <section className="panel">
+      <div className="grid gap-2 md:grid-cols-5">
+        {tabs.map((tab) => (
+          <Link className={tab.key === activeTab ? "tab-active" : "tab-link"} href={hrefWithParam(params, "tab", tab.key)} key={tab.key}>
+            <span>{tab.label}</span>
+            <small>{tab.description}</small>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ExecutiveDecisionPanel({
+  dashboard,
+  params,
+}: {
+  dashboard: ReturnType<typeof getDemoDashboard>;
+  params: Record<string, string | string[] | undefined>;
+}) {
+  return (
+    <section className="panel border-emerald-200 bg-emerald-50/30">
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <div className="max-w-4xl">
+          <Badge tone="real">Painel de decisao</Badge>
+          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
+            O que a rede deve resolver primeiro
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-700">
+            {dashboard.executiveDecision.mission} Os comentarios ficam como fonte primaria e evidencia; a tela principal mostra a decisao.
+          </p>
+        </div>
+        <Link className="btn-primary" href={hrefWithParams(params, { reviewTone: "negativas", tab: "porque", theme: dashboard.executiveDecision.primaryTheme })}>
+          Ver evidencias
+          <ArrowUpRight size={16} />
+        </Link>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
+        <div className="rounded-md border border-emerald-200 bg-white p-4">
+          <p className="text-xs font-semibold uppercase text-emerald-800">Acao recomendada agora</p>
+          <h3 className="mt-2 text-lg font-semibold leading-7 text-slate-950">
+            {dashboard.executiveDecision.primaryAction}
+          </h3>
+          <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+            <DecisionMiniCard label="Tema critico" value={dashboard.executiveDecision.primaryTheme} />
+            <DecisionMiniCard label="Loja em foco" value={dashboard.executiveDecision.primaryStore} />
+            <DecisionMiniCard label="Evidencias negativas" value={dashboard.executiveDecision.evidenceCount.toString()} />
+          </div>
+        </div>
+
+        <div className="rounded-md border border-slate-200 bg-white p-4">
+          <p className="text-xs font-semibold uppercase text-slate-500">Como o cliente enxerga</p>
+          <p className="mt-2 text-sm leading-6 text-slate-700">{dashboard.executiveDecision.customerView}</p>
+          <p className="mt-4 rounded-md bg-slate-50 p-3 text-sm leading-6 text-slate-700">
+            Base da prioridade: {dashboard.executiveDecision.whyItMatters}
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ActionQueue({
+  items,
+  params,
+}: {
+  items: ReturnType<typeof getDemoDashboard>["actionCommandCenter"]["actionQueue"];
+  params: Record<string, string | string[] | undefined>;
+}) {
+  return (
+    <div className="mt-5 overflow-x-auto rounded-md border border-slate-200">
+      <div className="min-w-[760px]">
+        <div className="grid grid-cols-[72px_1fr_120px_120px_130px] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase text-slate-500">
+          <span>Score</span>
+          <span>Tema e origem</span>
+          <span>SLA</span>
+          <span>Status</span>
+          <span>Reclamacoes</span>
+        </div>
+        {items.map((item) => (
+          <div className="grid grid-cols-[72px_1fr_120px_120px_130px] gap-3 border-t border-slate-200 px-4 py-3 text-sm" key={item.id}>
+            <strong className="text-emerald-800">{item.score}</strong>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-semibold text-slate-950">{item.theme}</span>
+                <Badge tone={item.priority === "Alta" ? "real" : "neutral"}>{item.priority}</Badge>
+              </div>
+              <p className="mt-1 leading-6 text-slate-700">{item.action}</p>
+              <p className="mt-1 text-xs text-slate-500">
+                {item.storesAffected} loja(s) afetada(s) · {item.negativeComments} reclamacao(oes) de origem
+              </p>
+              <ul className="mt-2 space-y-1 text-xs leading-5 text-slate-600">
+                {item.evidence.map((evidence) => <li key={evidence}>Evidencia: {evidence}</li>)}
+              </ul>
+              <p className="mt-2 text-xs text-slate-500">Dono: {item.owner}</p>
+            </div>
+            <span className="text-slate-700">{item.dueIn}</span>
+            <span className="font-medium text-slate-800">{item.stage}</span>
+            <Link className="font-semibold text-emerald-800 hover:underline" href={hrefWithParams(params, { reviewTone: "negativas", tab: "porque", theme: item.theme })}>
+              Ver origem
+            </Link>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function WeeklyRitual({ steps }: { steps: string[] }) {
+  return (
+    <section className="panel">
+      <div className="mb-3 flex items-center gap-2">
+        <ClipboardCheck size={18} />
+        <h3 className="font-semibold">Ritual semanal recomendado</h3>
+      </div>
+      <ol className="space-y-2 text-sm leading-6 text-slate-700">
+        {steps.map((step, index) => (
+          <li className="flex gap-2" key={step}>
+            <span className="grid size-6 shrink-0 place-items-center rounded-full bg-emerald-700 text-xs font-semibold text-white">
+              {index + 1}
+            </span>
+            <span>{step}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+function ActionPlanList({ items }: { items: ReturnType<typeof getDemoDashboard>["actionPlan"] }) {
+  return (
+    <section className="panel">
+      <div className="mb-4 flex items-center gap-2">
+        <ListChecks size={19} />
+        <h2 className="text-xl font-semibold">Plano de acao</h2>
+      </div>
+      <div className="space-y-3">
+        {items.map((item) => (
+          <article className="rounded-md border border-slate-200 p-4" key={item.id}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <Badge tone={item.priority === "Alta" ? "real" : "neutral"}>{item.priority}</Badge>
+                <h3 className="mt-3 font-semibold">{item.theme}</h3>
+              </div>
+              <Badge tone="real">Dados acessados</Badge>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-slate-700">{item.action}</p>
+            <dl className="mt-3 grid gap-2 text-xs text-slate-600">
+              <div><dt className="font-semibold">Responsavel</dt><dd>{item.owner}</dd></div>
+              <div><dt className="font-semibold">Prazo</dt><dd>{item.dueIn}</dd></div>
+              <div><dt className="font-semibold">Evidencia</dt><dd>{item.evidence}</dd></div>
+            </dl>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ReviewEvidencePanel({
+  params,
+  reviewSamples,
+  reviewTone,
+  selectedTheme,
+}: {
+  params: Record<string, string | string[] | undefined>;
+  reviewSamples: ReturnType<typeof getDemoDashboard>["reviewSamples"];
+  reviewTone?: string;
+  selectedTheme?: string;
+}) {
+  return (
+    <section className="panel">
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <h2 className="text-xl font-semibold">Comentarios que originaram a decisao</h2>
+        <Badge tone="real">Fonte primaria</Badge>
+      </div>
+      <p className="mb-4 text-sm leading-6 text-slate-600">
+        Comentarios sao exibidos aqui como evidencia da decisao, nao como o centro da interface.
+      </p>
+      {selectedTheme && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-md bg-emerald-50 p-3 text-sm text-emerald-950">
+          <span>Filtrando comentarios por tema:</span>
+          <Badge tone="real">{selectedTheme}</Badge>
+          {reviewTone === "negativas" && <Badge tone="real">Somente reclamacoes</Badge>}
+          <Link className="font-semibold text-emerald-800 hover:underline" href={hrefWithoutParams(params, ["theme", "reviewTone"])}>
+            Limpar filtro
+          </Link>
+        </div>
+      )}
+      <div className="space-y-4">
+        {reviewSamples.map((review) => (
+          <article className="border-b border-slate-200 pb-4 last:border-0" key={review.id}>
+            <div className="flex items-center justify-between gap-3">
+              <strong className="text-sm">{review.authorName}</strong>
+              <span className="text-sm font-semibold text-amber-700">{review.rating}/5</span>
+            </div>
+            <p className="mt-2 text-sm leading-6 text-slate-700">{review.text}</p>
+          </article>
+        ))}
+        {reviewSamples.length === 0 && (
+          <p className="rounded-md bg-slate-50 p-4 text-sm text-slate-600">
+            Nenhum comentario disponivel agora para este tema nos filtros atuais.
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function ThemeDecisionTable({
+  items,
+  showAverage = false,
+  title,
+}: {
+  items: ReturnType<typeof getDemoDashboard>["themeDecisionReport"];
+  showAverage?: boolean;
+  title: string;
+}) {
+  return (
+    <section className="panel">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
+            Prioridade calculada pelos dados acessados: comentarios negativos, quantidade de mencoes, lojas afetadas e risco operacional do tema.
+          </p>
+        </div>
+        <Badge tone="real">Dados acessados</Badge>
+      </div>
+      <div className="overflow-x-auto rounded-md border border-slate-200">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Tema</th>
+              <th>Prioridade</th>
+              <th>Score</th>
+              <th>Negativos</th>
+              <th>Mencoes</th>
+              {showAverage && <th>Nota media</th>}
+              <th>Lojas</th>
+              <th>Decisao recomendada</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => (
+              <tr key={item.theme}>
+                <td className="font-semibold text-slate-950">{item.theme}</td>
+                <td><Badge tone={item.priority === "Alta" ? "real" : "neutral"}>{item.priority}</Badge></td>
+                <td>{item.score}</td>
+                <td>{item.negativeComments}</td>
+                <td>{item.mentions}</td>
+                {showAverage && <td>{formatRating(item.averageRating)}</td>}
+                <td>{item.affectedStores}</td>
+                <td className="min-w-[280px] text-sm leading-6 text-slate-700">{item.decision}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function StoreDecisionList({ stores }: { stores: ReturnType<typeof getDemoDashboard>["storeDecisionReport"] }) {
+  return (
+    <div className="space-y-3">
+      {stores.map((store, index) => (
+        <Link className="block rounded-md border border-slate-200 p-3 hover:border-emerald-300 hover:bg-emerald-50/40" href={`/lojas/${store.slug}`} key={store.id}>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="grid size-7 place-items-center rounded-full bg-emerald-700 text-xs font-semibold text-white">{index + 1}</span>
+                <strong className="text-sm text-slate-950">{store.neighborhood}</strong>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-slate-600">{store.name}</p>
+            </div>
+            <Badge tone={store.priority === "Alta" ? "real" : "neutral"}>{store.priority}</Badge>
+          </div>
+          <div className="mt-3 grid gap-2 text-xs text-slate-600 sm:grid-cols-4">
+            <span>Score: <strong className="text-slate-950">{store.score}</strong></span>
+            <span>Nota: <strong className="text-slate-950">{formatRating(store.rating)}</strong></span>
+            <span>Negativos: <strong className="text-slate-950">{store.negativeComments}</strong></span>
+            <span>Tema: <strong className="text-slate-950">{store.criticalTheme}</strong></span>
+          </div>
+          <p className="mt-3 rounded-md bg-slate-50 p-2 text-xs leading-5 text-slate-700">{store.decision}</p>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function StoreComparisonTable({ stores }: { stores: ReturnType<typeof getDemoDashboard>["stores"] }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="data-table">
+        <thead>
+          <tr>
+            <th>Unidade</th>
+            <th>Bairro</th>
+            <th>Nota</th>
+            <th>Avaliacoes</th>
+            <th>Status</th>
+            <th>Maps</th>
+          </tr>
+        </thead>
+        <tbody>
+          {stores.map((store) => (
+            <tr key={store.id}>
+              <td>
+                <Link className="font-semibold text-emerald-800 hover:underline" href={`/lojas/${store.slug}`}>
+                  {store.displayName}
+                </Link>
+                <div className="text-xs text-slate-500">{store.placeId}</div>
+              </td>
+              <td>{store.neighborhood}</td>
+              <td>{formatRating(store.rating)}</td>
+              <td>{formatNumber(store.userRatingCount)}</td>
+              <td>{store.businessStatus}</td>
+              <td><a className="text-emerald-800 hover:underline" href={store.googleMapsUri} rel="noreferrer" target="_blank">Abrir</a></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -575,18 +675,16 @@ function asString(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
+function parseTab(value?: string): TabKey {
+  return tabs.some((tab) => tab.key === value) ? (value as TabKey) : "resumo";
+}
+
 function hrefWithParam(
   params: Record<string, string | string[] | undefined>,
   key: string,
   value: string,
 ) {
-  const next = new URLSearchParams();
-  Object.entries(params).forEach(([entryKey, entryValue]) => {
-    const normalized = asString(entryValue);
-    if (normalized && entryKey !== key) next.set(entryKey, normalized);
-  });
-  next.set(key, value);
-  return `/?${next.toString()}`;
+  return hrefWithParams(params, { [key]: value });
 }
 
 function hrefWithParams(
@@ -600,13 +698,6 @@ function hrefWithParams(
   });
   Object.entries(values).forEach(([key, value]) => next.set(key, value));
   return `/?${next.toString()}`;
-}
-
-function hrefWithoutParam(
-  params: Record<string, string | string[] | undefined>,
-  key: string,
-) {
-  return hrefWithoutParams(params, [key]);
 }
 
 function hrefWithoutParams(
