@@ -5,7 +5,7 @@ import {
   simulatedWeeklyFeedbacks,
   getSimulatedRatingTrend,
 } from "./demo-data";
-import type { ActionPlanItem, PublicStore, RatingTrendPeriod, WeeklyFeedback } from "./types";
+import type { ActionPlanItem, PublicReviewSample, PublicStore, RatingTrendPeriod } from "./types";
 
 export function getDemoDashboard(filters: {
   bairro?: string;
@@ -39,7 +39,7 @@ export function getDemoDashboard(filters: {
   });
 
   const actionPlan = simulatedActionPlan.filter((item) => !filters.theme || item.theme === filters.theme);
-  const actionCommandCenter = buildActionCommandCenter(actionPlan, weeklyFeedbacks);
+  const actionCommandCenter = buildActionCommandCenter(actionPlan, reviewSamples);
 
   return {
     stores,
@@ -167,7 +167,7 @@ function parseRatingPeriod(value?: string): RatingTrendPeriod {
   return "semanal";
 }
 
-function buildActionCommandCenter(actionPlan: ActionPlanItem[], weeklyFeedbacks: WeeklyFeedback[]) {
+function buildActionCommandCenter(actionPlan: ActionPlanItem[], reviewSamples: PublicReviewSample[]) {
   const actionQueue = actionPlan
     .map((item) => ({
       ...item,
@@ -178,16 +178,16 @@ function buildActionCommandCenter(actionPlan: ActionPlanItem[], weeklyFeedbacks:
     .sort((a, b) => b.score - a.score)
     .slice(0, 6);
 
-  const negativeFeedbacks = weeklyFeedbacks.filter((feedback) => feedback.sentiment === "Reclamacao");
+  const negativeReviews = reviewSamples.filter((review) => review.rating <= 2);
   const topTheme = mostFrequent([
-    ...negativeFeedbacks.map((feedback) => feedback.theme),
+    ...identifyThemes(negativeReviews.map((review) => review.text)),
     ...actionPlan.filter((item) => item.priority === "Alta").map((item) => item.theme),
   ]);
 
   return {
     criticalActions: actionPlan.filter((item) => item.priority === "Alta").length,
     dueSoonActions: actionPlan.filter((item) => item.dueIn.includes("48") || item.dueIn.includes("7")).length,
-    negativeFeedbacks: negativeFeedbacks.length,
+    negativeFeedbacks: negativeReviews.length,
     topRiskTheme: topTheme ?? "Sem tema critico",
     actionQueue,
     weeklyRitual: [

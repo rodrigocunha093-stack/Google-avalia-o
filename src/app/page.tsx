@@ -4,7 +4,6 @@ import {
   ArrowUpRight,
   Building2,
   ClipboardCheck,
-  Clock3,
   Filter,
   Flame,
   ListChecks,
@@ -17,7 +16,6 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/badge";
 import { Notice } from "@/components/notice";
-import { RatingTrendChart } from "@/components/rating-trend-chart";
 import { StoreFilters } from "@/components/store-filters";
 import { getDemoDashboard } from "@/lib/dashboard";
 import { formatNumber, formatRating } from "@/lib/format";
@@ -123,10 +121,10 @@ export default async function Home({
               <div>
                 <h2 className="text-xl font-semibold">Comparativo das lojas</h2>
                 <p className="text-sm text-slate-600">
-                  Dados publicos informados manualmente para a demonstracao; confirmar via Places API ou Google Business Profile antes de producao.
+                  Dados reais acessados/informados para a demonstracao; confirmar via Places API, Google Business Profile ou importacao oficial antes de producao.
                 </p>
               </div>
-              <Badge tone="neutral">Dado publico informado</Badge>
+              <Badge tone="real">Dado real acessado</Badge>
             </div>
             <div className="overflow-x-auto">
               <table className="data-table">
@@ -165,7 +163,17 @@ export default async function Home({
             </div>
           </section>
 
-          <RatingTrendChart period={dashboard.ratingPeriod} points={dashboard.ratingTrend} />
+          <section className="panel">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold">Nota por periodo real</h2>
+                <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
+                  Este grafico foi retirado da visao principal porque nao existe historico real por semana, mes ou ano nos dados acessados agora. Ele sera exibido somente apos autorizacao do Google Business Profile ou importacao oficial com datas das avaliacoes.
+                </p>
+              </div>
+              <Badge tone="authorized">Disponivel apos autorizacao</Badge>
+            </div>
+          </section>
 
           <section className="panel border-emerald-100 bg-white">
             <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
@@ -175,10 +183,10 @@ export default async function Home({
                   <h2 className="text-xl font-semibold">Central de acao gerencial</h2>
                 </div>
                 <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
-                  Visao inspirada em rotinas de operacao de reputacao: prioriza o que exige dono, prazo, evidencia e retorno ao cliente. Os itens abaixo sao simulados para demonstrar a rotina apos conexao oficial.
+                  Priorizacao operacional gerada a partir dos comentarios acessados/importados nesta demonstracao. As acoes sao recomendacoes do sistema; os fatos destacados vêm dos dados acessados.
                 </p>
               </div>
-              <Badge tone="simulated">Demonstracao simulada</Badge>
+              <Badge tone="real">Analise dos dados acessados</Badge>
             </div>
 
             <div className="grid gap-3 md:grid-cols-4">
@@ -203,7 +211,7 @@ export default async function Home({
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="font-semibold text-slate-950">{item.theme}</span>
-                          <Badge tone={item.priority === "Alta" ? "simulated" : "neutral"}>{item.priority}</Badge>
+                        <Badge tone={item.priority === "Alta" ? "real" : "neutral"}>{item.priority}</Badge>
                         </div>
                         <p className="mt-1 leading-6 text-slate-700">{item.action}</p>
                         <p className="mt-1 text-xs text-slate-500">Dono: {item.owner}</p>
@@ -263,11 +271,11 @@ export default async function Home({
 
             <div className="panel">
               <div className="mb-4 flex items-center justify-between gap-2">
-                <h2 className="text-xl font-semibold">Comentarios disponiveis agora</h2>
-                <Badge tone="real">Dado publico limitado</Badge>
+                <h2 className="text-xl font-semibold">Comentarios reais acessados</h2>
+                <Badge tone="real">Dado real acessado</Badge>
               </div>
               <p className="mb-4 text-sm leading-6 text-slate-600">
-                Sem autorizacao do Google Business Profile, a fonte publica nao entrega todos os comentarios. Esta area mostra apenas os comentarios que a fonte atual permite exibir.
+                Esta area mostra somente comentarios acessados/importados na demonstracao. Ela nao afirma conter o historico completo sem autorizacao do Google Business Profile ou importacao oficial.
               </p>
               {selectedTheme && (
                 <div className="mb-4 flex flex-wrap items-center gap-2 rounded-md bg-emerald-50 p-3 text-sm text-emerald-950">
@@ -317,25 +325,25 @@ export default async function Home({
                 )}
               </div>
               <p className="mt-4 text-sm leading-6 text-slate-600">
-                Clique em um tema para filtrar os comentarios disponiveis agora, os feedbacks da semana e o plano de acao. A classificacao completa de todos os comentarios depende da autorizacao do Google Business Profile ou importacao oficial do cliente.
+                Clique em um tema para filtrar os comentarios reais acessados e o plano de acao gerado a partir deles. A classificacao completa de todos os comentarios depende da autorizacao do Google Business Profile ou importacao oficial do cliente.
               </p>
             </div>
             <div className="panel">
-              <div className="mb-4 flex items-center gap-2">
-                <Clock3 size={19} />
-                <h2 className="text-xl font-semibold">Futuro relatorio semanal</h2>
+              <div className="mb-4 flex items-center justify-between gap-2">
+                <h2 className="text-xl font-semibold">Indicadores semanais reais</h2>
+                <Badge tone="authorized">Apos autorizacao</Badge>
               </div>
-              <div className="space-y-3">
-                {dashboard.futureWeeklyReport.map((item) => (
-                  <div className="flex items-center justify-between rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-2" key={item.label}>
-                    <span className="text-sm text-slate-700">{item.label}</span>
-                    <Badge tone="simulated">{item.value}</Badge>
-                  </div>
-                ))}
+              <div className="space-y-3 text-sm leading-6 text-slate-700">
+                <p>
+                  Os dados acessados agora nao permitem afirmar nota da semana, novas avaliacoes da semana, taxa de resposta ou pendencias reais.
+                </p>
+                <p>
+                  Esses indicadores entram quando a rede autorizar o Google Business Profile ou enviar uma importacao oficial com data, nota, texto e status de resposta.
+                </p>
               </div>
-              <div className="mt-4 flex items-start gap-2 rounded-md bg-amber-50 p-3 text-sm text-amber-900">
+              <div className="mt-4 flex items-start gap-2 rounded-md bg-sky-50 p-3 text-sm text-sky-900">
                 <AlertTriangle className="mt-0.5 shrink-0" size={16} />
-                <p>Bloco ilustrativo com dados simulados. Nao representa indicadores reais das lojas.</p>
+                <p>Nenhum numero semanal sera apresentado sem base real acessada.</p>
               </div>
             </div>
           </section>
@@ -363,35 +371,16 @@ export default async function Home({
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <MessageSquareText size={19} />
-                  <h2 className="text-xl font-semibold">Feedbacks da ultima semana</h2>
+                  <h2 className="text-xl font-semibold">Feedbacks reais por periodo</h2>
                 </div>
-                <Badge tone="simulated">Demonstracao simulada</Badge>
+                <Badge tone="authorized">Apos autorizacao</Badge>
               </div>
               <p className="mb-4 text-sm leading-6 text-slate-600">
-                Sem Places API ou autorizacao Google Business Profile, feedbacks por periodo nao podem ser extraidos do Google com seguranca. Este bloco mostra como a analise semanal ficara apos autorizacao ou importacao confiavel.
+                Os comentarios acessados nesta demonstracao nao formam uma base completa e auditavel por periodo. Por isso, a area abaixo nao inventa feedbacks da ultima semana.
               </p>
-              <div className="space-y-3">
-                {dashboard.weeklyFeedbacks.map((feedback) => (
-                  <article className="rounded-md border border-slate-200 p-4" key={feedback.id}>
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <strong className="text-sm">{feedback.storeName}</strong>
-                        <p className="mt-1 text-xs text-slate-500">{feedback.theme} · {feedback.sentiment}</p>
-                      </div>
-                      <Badge tone={feedback.sentiment === "Reclamacao" ? "simulated" : "neutral"}>{feedback.rating}/5</Badge>
-                    </div>
-                    <p className="mt-3 text-sm leading-6 text-slate-700">{feedback.text}</p>
-                    <p className="mt-3 rounded-md bg-slate-50 p-3 text-sm font-medium text-slate-800">
-                      Acao sugerida: {feedback.recommendedAction}
-                    </p>
-                  </article>
-                ))}
-                {dashboard.weeklyFeedbacks.length === 0 && (
-                  <p className="rounded-md bg-slate-50 p-4 text-sm text-slate-600">
-                    Nenhum feedback simulado encontrado para os filtros atuais.
-                  </p>
-                )}
-              </div>
+              <p className="rounded-md bg-slate-50 p-4 text-sm text-slate-600">
+                A lista por periodo sera preenchida somente com avaliacoes reais importadas com data. Ate la, use os comentarios acessados agora e os temas identificados como base de diagnostico.
+              </p>
             </div>
 
             <div className="panel">
@@ -404,10 +393,10 @@ export default async function Home({
                   <article className="rounded-md border border-slate-200 p-4" key={item.id}>
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <Badge tone={item.priority === "Alta" ? "simulated" : "neutral"}>{item.priority}</Badge>
-                        <h3 className="mt-3 font-semibold">{item.theme}</h3>
-                      </div>
-                      <Badge tone="simulated">Simulado</Badge>
+                      <Badge tone={item.priority === "Alta" ? "real" : "neutral"}>{item.priority}</Badge>
+                      <h3 className="mt-3 font-semibold">{item.theme}</h3>
+                    </div>
+                      <Badge tone="real">Dados acessados</Badge>
                     </div>
                     <p className="mt-3 text-sm leading-6 text-slate-700">{item.action}</p>
                     <dl className="mt-3 grid gap-2 text-xs text-slate-600">

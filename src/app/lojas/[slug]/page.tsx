@@ -4,7 +4,6 @@ import { ArrowLeft, ExternalLink, LockKeyhole, MapPin, Phone, Star } from "lucid
 import { Badge } from "@/components/badge";
 import { Notice } from "@/components/notice";
 import { getStoreBySlug } from "@/lib/dashboard";
-import { simulatedConnectedMetrics } from "@/lib/demo-data";
 import { formatNumber, formatRating } from "@/lib/format";
 
 type Params = Promise<{ slug: string }>;
@@ -28,7 +27,7 @@ export default async function StorePage({ params }: { params: Params }) {
           </Link>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <Badge tone="real">Dado publico real</Badge>
+              <Badge tone="real">Dado real acessado</Badge>
               <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">{store.displayName}</h1>
               <p className="mt-2 flex items-center gap-2 text-slate-600">
                 <MapPin size={17} />
@@ -79,7 +78,7 @@ export default async function StorePage({ params }: { params: Params }) {
           <section className="panel">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold">Comentarios disponiveis agora</h2>
-              <Badge tone="real">Dado publico limitado</Badge>
+              <Badge tone="real">Dado real acessado</Badge>
             </div>
             <p className="mb-4 text-sm text-slate-600">
               A fonte publica nao entrega todos os comentarios. Para historico completo, comentarios por periodo e respostas, e necessario conectar o Google Business Profile ou importar arquivo oficial do cliente.
@@ -124,23 +123,18 @@ export default async function StorePage({ params }: { params: Params }) {
 
           <section className="panel">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-xl font-semibold">Como ficara apos a conexao</h2>
+              <h2 className="text-xl font-semibold">Dados que faltam para ficar 100% real</h2>
               <Badge tone="authorized">Disponivel apos autorizacao</Badge>
             </div>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Os numeros abaixo sao demonstrativos e estao separados dos dados reais.
+              Nao exibimos numeros simulados nesta area. Estes indicadores entram apenas quando houver autorizacao do Google Business Profile ou importacao oficial com historico completo.
             </p>
-            <div className="mt-4 space-y-3">
-              {simulatedConnectedMetrics.map((metric) => (
-                <div className="rounded-md border border-amber-200 bg-amber-50 p-3" key={metric.label}>
-                  <div className="flex items-start justify-between gap-3">
-                    <span className="text-sm font-medium text-amber-950">{metric.label}</span>
-                    <Badge tone="simulated">Demonstracao simulada</Badge>
-                  </div>
-                  <p className="mt-2 text-lg font-semibold text-slate-950">{metric.value}</p>
-                </div>
-              ))}
-            </div>
+            <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
+              <li className="rounded-md border border-slate-200 bg-slate-50 p-3">Novas avaliacoes por semana com data real</li>
+              <li className="rounded-md border border-slate-200 bg-slate-50 p-3">Nota semanal, mensal e anual real</li>
+              <li className="rounded-md border border-slate-200 bg-slate-50 p-3">Respostas, pendencias e taxa de resposta</li>
+              <li className="rounded-md border border-slate-200 bg-slate-50 p-3">Historico completo acessivel por loja</li>
+            </ul>
           </section>
         </aside>
       </section>
