@@ -85,6 +85,13 @@ select {
   vertical-align: top;
 }
 
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.9rem;
+  align-items: end;
+}
+
 .theme-chip,
 .theme-chip-active,
 .theme-chip-clear {

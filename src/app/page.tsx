@@ -86,22 +86,25 @@ export default async function Home({
         <MetricCard icon={<MapPinned size={20} />} label="Maior volume" value={dashboard.summary.mostReviewed?.displayName ?? "-"} badge={`${formatNumber(dashboard.summary.mostReviewed?.userRatingCount ?? 0)} avaliacoes`} />
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[320px_1fr] lg:px-8">
-        <aside className="panel h-fit">
-          <div className="mb-4 flex items-center gap-2">
-            <Filter size={18} />
-            <h2 className="text-lg font-semibold">Filtros</h2>
-          </div>
-          <StoreFilters
-            bairros={dashboard.filters.bairros}
-            ratingPeriod={dashboard.ratingPeriod}
-            statuses={dashboard.filters.statuses}
-            stores={dashboard.filters.stores}
-            themes={dashboard.filters.themes}
-          />
-        </aside>
-
+      <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
         <div className="space-y-6">
+          <section className="panel">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Filter size={18} />
+                <h2 className="text-lg font-semibold">Filtros</h2>
+              </div>
+              <Badge tone="neutral">Aplicado em todas as abas</Badge>
+            </div>
+            <StoreFilters
+              bairros={dashboard.filters.bairros}
+              ratingPeriod={dashboard.ratingPeriod}
+              statuses={dashboard.filters.statuses}
+              stores={dashboard.filters.stores}
+              themes={dashboard.filters.themes}
+            />
+          </section>
+
           <TabNavigation activeTab={activeTab} params={params} />
 
           {activeTab === "resumo" && (

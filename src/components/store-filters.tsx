@@ -26,7 +26,7 @@ export function StoreFilters({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="filter-grid">
       <Select label="Unidade" name="store" onChange={update} value={searchParams.get("store") ?? ""}>
         <option value="">Todas</option>
         {stores.map((store) => (
@@ -84,7 +84,7 @@ function Select({
   value: string;
 }) {
   return (
-    <label className="block">
+    <label className="block min-w-0">
       <span className="text-sm font-medium text-slate-700">{label}</span>
       <select
         className="mt-2 h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
