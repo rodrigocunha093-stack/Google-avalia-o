@@ -47,6 +47,7 @@ export function getDemoDashboard(filters: {
   const themeDecisionReport = buildThemeDecisionReport(availableReviews);
   const storeDecisionReport = buildStoreDecisionReport(stores);
   const executiveDecision = buildExecutiveDecision(actionCommandCenter.actionQueue, themeDecisionReport, storeDecisionReport);
+  const customerPerception = buildCustomerPerception(stores, availableReviews, themeDecisionReport);
 
   return {
     stores,
@@ -56,6 +57,7 @@ export function getDemoDashboard(filters: {
     weeklyFeedbacks,
     actionPlan,
     actionCommandCenter,
+    customerPerception,
     executiveDecision,
     themeDecisionReport,
     storeDecisionReport,
@@ -79,6 +81,50 @@ export function getDemoDashboard(filters: {
       bestRated,
       mostReviewed,
     },
+  };
+}
+
+function buildCustomerPerception(
+  stores: PublicStore[],
+  reviews: PublicReviewSample[],
+  themeDecisionReport: ReturnType<typeof buildThemeDecisionReport>,
+) {
+  const positiveReviews = reviews.filter((review) => review.rating >= 4);
+  const negativeReviews = reviews.filter((review) => review.rating <= 2);
+  const positiveThemes = identifyThemes(positiveReviews.map((review) => review.text))
+    .filter((theme) => !["Caixas", "Controle de pragas", "Estacionamento", "Filas", "Higiene", "Seguranca", "Validade"].includes(theme))
+    .slice(0, 5);
+  const negativeThemes = themeDecisionReport
+    .filter((item) => item.negativeComments > 0)
+    .slice(0, 5)
+    .map((item) => item.theme);
+  const bestStores = [...stores]
+    .sort((a, b) => b.rating - a.rating || b.userRatingCount - a.userRatingCount)
+    .slice(0, 3)
+    .map((store) => `${store.neighborhood} (${store.rating.toFixed(1)})`);
+  const sensitiveStores = [...stores]
+    .map((store) => ({
+      neighborhood: store.neighborhood,
+      negatives: store.reviews.filter((review) => review.rating <= 2).length,
+      rating: store.rating,
+    }))
+    .sort((a, b) => b.negatives - a.negatives || a.rating - b.rating)
+    .slice(0, 3)
+    .map((store) => `${store.neighborhood} (${store.negatives} negativas)`);
+
+  return {
+    networkProfile: `A rede e percebida publicamente com nota media ponderada forte, mas os comentarios acessados indicam tensao operacional em ${negativeThemes.slice(0, 3).join(", ") || "temas ainda pouco recorrentes"}.`,
+    positiveHighlight: positiveThemes.length
+      ? `Onde estamos acertando: ${positiveThemes.join(", ")}.`
+      : `Onde estamos acertando: as melhores notas publicas estao em ${bestStores.join(", ")}.`,
+    negativeHighlight: negativeThemes.length
+      ? `Onde estamos errando: ${negativeThemes.join(", ")}.`
+      : "Onde estamos errando: ainda nao ha volume negativo suficiente nos comentarios acessados.",
+    networkConsolidated: `Consolidado da rede: melhores percepcoes em ${bestStores.join(", ")}; lojas mais sensiveis nos comentarios acessados: ${sensitiveStores.join(", ")}.`,
+    positiveThemes,
+    negativeThemes,
+    positiveReviews: positiveReviews.slice(0, 3),
+    negativeReviews: negativeReviews.slice(0, 3),
   };
 }
 

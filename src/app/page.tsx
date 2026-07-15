@@ -197,29 +197,50 @@ export default async function Home({
 
           {activeTab === "percepcao" && (
             <div className="space-y-6">
+              <section className="panel border-emerald-100 bg-white">
+                <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-2xl font-semibold tracking-tight">Perfil percebido pelo cliente</h2>
+                    <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-600">
+                      Esta aba traduz os comentarios acessados em leitura de percepcao: onde a rede e vista positivamente, onde esta frustrando o cliente e qual o consolidado geral.
+                    </p>
+                  </div>
+                  <Badge tone="real">Fundamentado por comentarios</Badge>
+                </div>
+
+                <div className="grid gap-4 lg:grid-cols-3">
+                  <PerceptionCard
+                    tone="neutral"
+                    title="Perfil geral da rede"
+                    text={dashboard.customerPerception.networkProfile}
+                  />
+                  <PerceptionCard
+                    tone="positive"
+                    title="Onde estamos acertando"
+                    text={dashboard.customerPerception.positiveHighlight}
+                  />
+                  <PerceptionCard
+                    tone="negative"
+                    title="Onde estamos errando"
+                    text={dashboard.customerPerception.negativeHighlight}
+                  />
+                </div>
+
+                <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs font-semibold uppercase text-slate-500">Consolidado para a rede</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-700">{dashboard.customerPerception.networkConsolidated}</p>
+                </div>
+              </section>
+
               <section className="grid gap-6 lg:grid-cols-2">
                 <section className="panel">
-                  <h2 className="text-xl font-semibold">Como o Cliente Está Enxergando A Loja</h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    {dashboard.executiveDecision.customerView}
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {dashboard.themes.map((theme) => (
-                      <Link className={theme === selectedTheme ? "theme-chip-active" : "theme-chip"} href={hrefWithParam(params, "theme", theme)} key={theme}>
-                        {theme}
-                      </Link>
-                    ))}
-                    {selectedTheme && <Link className="theme-chip-clear" href={hrefWithoutParams(params, ["theme", "reviewTone"])}>Todos</Link>}
-                  </div>
+                  <h2 className="text-xl font-semibold">Comentarios positivos que sustentam o destaque</h2>
+                  <ReviewQuoteList reviews={dashboard.customerPerception.positiveReviews} />
                 </section>
 
                 <section className="panel">
-                  <h2 className="text-xl font-semibold">Pontos fortes e pontos criticos</h2>
-                  <div className="mt-4 grid gap-3">
-                    <DecisionMiniCard label="Ponto critico principal" value={dashboard.executiveDecision.primaryTheme} />
-                    <DecisionMiniCard label="Loja mais sensivel" value={dashboard.executiveDecision.primaryStore} />
-                    <DecisionMiniCard label="Ponto forte publico" value={dashboard.summary.bestRated?.displayName ?? "-"} />
-                  </div>
+                  <h2 className="text-xl font-semibold">Comentarios negativos que sustentam o alerta</h2>
+                  <ReviewQuoteList reviews={dashboard.customerPerception.negativeReviews} />
                 </section>
               </section>
 
@@ -229,7 +250,15 @@ export default async function Home({
                   <StoreComparisonTable stores={dashboard.stores} />
                 </section>
                 <section className="panel">
-                  <h2 className="text-xl font-semibold">Matriz territorial</h2>
+                  <h2 className="text-xl font-semibold">Temas de percepcao</h2>
+                  <div className="mb-4 flex flex-wrap gap-2">
+                    {dashboard.themes.map((theme) => (
+                      <Link className={theme === selectedTheme ? "theme-chip-active" : "theme-chip"} href={hrefWithParam(params, "theme", theme)} key={theme}>
+                        {theme}
+                      </Link>
+                    ))}
+                    {selectedTheme && <Link className="theme-chip-clear" href={hrefWithoutParams(params, ["theme", "reviewTone"])}>Todos</Link>}
+                  </div>
                   <StoreDecisionList stores={dashboard.storeDecisionReport.slice(0, 4)} />
                 </section>
               </section>
@@ -629,6 +658,49 @@ function StoreComparisonTable({ stores }: { stores: ReturnType<typeof getDemoDas
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function PerceptionCard({
+  text,
+  title,
+  tone,
+}: {
+  text: string;
+  title: string;
+  tone: "positive" | "negative" | "neutral";
+}) {
+  const toneClass = {
+    negative: "border-rose-200 bg-rose-50 text-rose-950",
+    neutral: "border-slate-200 bg-slate-50 text-slate-950",
+    positive: "border-emerald-200 bg-emerald-50 text-emerald-950",
+  }[tone];
+
+  return (
+    <article className={`rounded-md border p-4 ${toneClass}`}>
+      <p className="text-xs font-semibold uppercase opacity-75">{title}</p>
+      <p className="mt-2 text-sm leading-6">{text}</p>
+    </article>
+  );
+}
+
+function ReviewQuoteList({ reviews }: { reviews: ReturnType<typeof getDemoDashboard>["reviewSamples"] }) {
+  if (!reviews.length) {
+    return <p className="mt-4 rounded-md bg-slate-50 p-4 text-sm text-slate-600">Sem comentarios suficientes nos dados acessados.</p>;
+  }
+
+  return (
+    <div className="mt-4 space-y-3">
+      {reviews.map((review) => (
+        <article className="rounded-md border border-slate-200 p-3" key={review.id}>
+          <div className="flex items-center justify-between gap-3">
+            <strong className="text-sm">{review.authorName}</strong>
+            <span className="text-sm font-semibold text-amber-700">{review.rating}/5</span>
+          </div>
+          <p className="mt-2 text-sm leading-6 text-slate-700">{review.text}</p>
+        </article>
+      ))}
     </div>
   );
 }

@@ -68,6 +68,16 @@ describe("dashboard", () => {
     expect(dashboard.executiveDecision.evidenceCount).toBeGreaterThan(0);
   });
 
+  it("resume a percepcao do cliente com destaques positivos e negativos", () => {
+    const dashboard = getDemoDashboard({});
+
+    expect(dashboard.customerPerception.networkProfile).toContain("rede");
+    expect(dashboard.customerPerception.positiveHighlight).toContain("Onde estamos acertando");
+    expect(dashboard.customerPerception.negativeHighlight).toContain("Onde estamos errando");
+    expect(dashboard.customerPerception.networkConsolidated).toContain("Consolidado da rede");
+    expect(dashboard.customerPerception.negativeReviews.length).toBeGreaterThan(0);
+  });
+
   it("filtra comentarios disponiveis por tema", () => {
     const dashboard = getDemoDashboard({ theme: "Filas" });
 
