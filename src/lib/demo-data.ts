@@ -40,8 +40,8 @@ export const demoStores: PublicStore[] = [
     review("manaira", "Mateus Osorio", 2, "Cliente relata atendimento pessimo nos caixas, com mau humor e rispidez em visitas repetidas."),
   ]),
   store("intermares", "Supermercado Menor Preco - Intermares", "Intermares", 4.7, 1652, -7.0431, -34.8424),
-  store("cristo", "Supermercado Menor Preco - Cristo", "Cristo", 4.4, 1218, -7.1458, -34.8756),
-  store("torre", "Supermercado Menor Preco - Torre", "Torre", 4.6, 1432, -7.1195, -34.8611),
+  store("cristo", "Rede Menor Preco Supermercados - Cristo", "Cristo", 4.2, 2188, -7.1458, -34.8756),
+  store("torre", "Rede Menor Preco Supermercados - Torre", "Torre", 4.4, 1379, -7.1195, -34.8611),
   store("altiplano", "Supermercado Menor Preco - Altiplano", "Altiplano", 4.4, 92, -7.1342, -34.8214, [
     review("altiplano", "Wagner M Souza", 2, "Pequeno. Com muitas promocoes no encarte, mas com limitacao de quantidades por cliente. Atrai pelo preco, mas nao permite comprar livremente."),
     review("altiplano", "Mateus Leite Arnaud", 1, "Pior sistema de autoatendimento que voce vai encontrar. Nao funciona nem com o proprio funcionario treinado para usa-lo."),

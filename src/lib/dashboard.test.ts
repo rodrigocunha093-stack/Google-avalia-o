@@ -31,6 +31,10 @@ describe("dashboard", () => {
     expect(byId.get("mega-atacarejo")?.userRatingCount).toBe(909);
     expect(byId.get("altiplano")?.rating).toBe(4.4);
     expect(byId.get("altiplano")?.userRatingCount).toBe(92);
+    expect(byId.get("torre")?.rating).toBe(4.4);
+    expect(byId.get("torre")?.userRatingCount).toBe(1379);
+    expect(byId.get("cristo")?.rating).toBe(4.2);
+    expect(byId.get("cristo")?.userRatingCount).toBe(2188);
   });
 
   it("filtra feedbacks simulados por ultima semana e tema", () => {
