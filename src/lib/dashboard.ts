@@ -5,7 +5,7 @@ import {
   simulatedWeeklyFeedbacks,
   getSimulatedRatingTrend,
 } from "./demo-data";
-import type { PublicStore, RatingTrendPeriod } from "./types";
+import type { ActionPlanItem, PublicStore, RatingTrendPeriod, WeeklyFeedback } from "./types";
 
 export function getDemoDashboard(filters: {
   bairro?: string;
@@ -38,13 +38,17 @@ export function getDemoDashboard(filters: {
     return stores.some((store) => store.id === feedback.storeId);
   });
 
+  const actionPlan = simulatedActionPlan.filter((item) => !filters.theme || item.theme === filters.theme);
+  const actionCommandCenter = buildActionCommandCenter(actionPlan, weeklyFeedbacks);
+
   return {
     stores,
     reviewSamples,
     selectedTheme: filters.theme,
     themes: identifyThemes(availableReviews.map((review) => review.text)),
     weeklyFeedbacks,
-    actionPlan: simulatedActionPlan.filter((item) => !filters.theme || item.theme === filters.theme),
+    actionPlan,
+    actionCommandCenter,
     ratingTrend: getSimulatedRatingTrend(ratingPeriod, filters.store),
     ratingPeriod,
     futureWeeklyReport: simulatedConnectedMetrics,
@@ -96,7 +100,8 @@ function identifyThemes(texts: string[]) {
 
   return dictionary
     .filter(([needle]) => texts.some((text) => normalize(text).includes(needle)))
-    .map(([, label]) => label);
+    .map(([, label]) => label)
+    .filter((label, index, labels) => labels.indexOf(label) === index);
 }
 
 function reviewMatchesTheme(text: string, theme: string) {
@@ -160,4 +165,50 @@ function unique(values: string[]) {
 function parseRatingPeriod(value?: string): RatingTrendPeriod {
   if (value === "mensal" || value === "anual") return value;
   return "semanal";
+}
+
+function buildActionCommandCenter(actionPlan: ActionPlanItem[], weeklyFeedbacks: WeeklyFeedback[]) {
+  const actionQueue = actionPlan
+    .map((item) => ({
+      ...item,
+      score: actionScore(item),
+      slaStatus: item.dueIn.includes("48") ? "Critico" : item.dueIn.includes("7") ? "Esta semana" : "Monitorar",
+      stage: item.priority === "Alta" ? "Acionar hoje" : item.priority === "Media" ? "Planejar na semana" : "Acompanhar",
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 6);
+
+  const negativeFeedbacks = weeklyFeedbacks.filter((feedback) => feedback.sentiment === "Reclamacao");
+  const topTheme = mostFrequent([
+    ...negativeFeedbacks.map((feedback) => feedback.theme),
+    ...actionPlan.filter((item) => item.priority === "Alta").map((item) => item.theme),
+  ]);
+
+  return {
+    criticalActions: actionPlan.filter((item) => item.priority === "Alta").length,
+    dueSoonActions: actionPlan.filter((item) => item.dueIn.includes("48") || item.dueIn.includes("7")).length,
+    negativeFeedbacks: negativeFeedbacks.length,
+    topRiskTheme: topTheme ?? "Sem tema critico",
+    actionQueue,
+    weeklyRitual: [
+      "Triar reclamacoes criticas por loja e tema",
+      "Definir responsavel, prazo e evidencia esperada",
+      "Registrar resposta ao cliente e acao executada",
+      "Revisar recorrencia na reuniao semanal de gerentes",
+    ],
+  };
+}
+
+function actionScore(item: ActionPlanItem) {
+  const priorityScore = item.priority === "Alta" ? 60 : item.priority === "Media" ? 35 : 15;
+  const dueScore = item.dueIn.includes("48") ? 25 : item.dueIn.includes("7") ? 15 : 5;
+  const riskThemes = ["Higiene", "Validade", "Carnes", "Seguranca", "Controle de pragas", "Refrigeracao"];
+  const riskScore = riskThemes.includes(item.theme) ? 15 : 0;
+  return priorityScore + dueScore + riskScore;
+}
+
+function mostFrequent(values: string[]) {
+  const counts = new Map<string, number>();
+  values.forEach((value) => counts.set(value, (counts.get(value) ?? 0) + 1));
+  return Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0];
 }

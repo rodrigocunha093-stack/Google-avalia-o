@@ -45,11 +45,28 @@ describe("dashboard", () => {
     expect(dashboard.weeklyFeedbacks.every((feedback) => feedback.dataSource === "DEMO_SIMULATED")).toBe(true);
   });
 
+  it("monta uma central de acao com fila priorizada", () => {
+    const dashboard = getDemoDashboard({});
+
+    expect(dashboard.actionCommandCenter.criticalActions).toBeGreaterThan(0);
+    expect(dashboard.actionCommandCenter.dueSoonActions).toBeGreaterThan(0);
+    expect(dashboard.actionCommandCenter.actionQueue[0]?.score).toBeGreaterThanOrEqual(
+      dashboard.actionCommandCenter.actionQueue.at(-1)?.score ?? 0,
+    );
+    expect(dashboard.actionCommandCenter.weeklyRitual).toContain("Definir responsavel, prazo e evidencia esperada");
+  });
+
   it("filtra comentarios disponiveis por tema", () => {
     const dashboard = getDemoDashboard({ theme: "Filas" });
 
     expect(dashboard.reviewSamples.length).toBeGreaterThan(0);
     expect(dashboard.reviewSamples.every((review) => review.text.toLowerCase().includes("fila"))).toBe(true);
+  });
+
+  it("mantem temas identificados sem duplicidade para chaves estaveis na interface", () => {
+    const dashboard = getDemoDashboard({});
+
+    expect(new Set(dashboard.themes).size).toBe(dashboard.themes.length);
   });
 
   it("inclui avaliacoes de menor classificacao para Altiplano", () => {

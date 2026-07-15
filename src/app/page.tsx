@@ -3,8 +3,10 @@ import {
   AlertTriangle,
   ArrowUpRight,
   Building2,
+  ClipboardCheck,
   Clock3,
   Filter,
+  Flame,
   ListChecks,
   LockKeyhole,
   MapPinned,
@@ -164,6 +166,73 @@ export default async function Home({
           </section>
 
           <RatingTrendChart period={dashboard.ratingPeriod} points={dashboard.ratingTrend} />
+
+          <section className="panel border-emerald-100 bg-white">
+            <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Flame className="text-emerald-800" size={20} />
+                  <h2 className="text-xl font-semibold">Central de acao gerencial</h2>
+                </div>
+                <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
+                  Visao inspirada em rotinas de operacao de reputacao: prioriza o que exige dono, prazo, evidencia e retorno ao cliente. Os itens abaixo sao simulados para demonstrar a rotina apos conexao oficial.
+                </p>
+              </div>
+              <Badge tone="simulated">Demonstracao simulada</Badge>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-4">
+              <ActionMetric label="Acoes criticas" value={dashboard.actionCommandCenter.criticalActions.toString()} />
+              <ActionMetric label="Prazos da semana" value={dashboard.actionCommandCenter.dueSoonActions.toString()} />
+              <ActionMetric label="Reclamacoes triadas" value={dashboard.actionCommandCenter.negativeFeedbacks.toString()} />
+              <ActionMetric label="Tema de maior risco" value={dashboard.actionCommandCenter.topRiskTheme} />
+            </div>
+
+            <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_340px]">
+              <div className="overflow-x-auto rounded-md border border-slate-200">
+                <div className="min-w-[720px]">
+                  <div className="grid grid-cols-[72px_1fr_120px_120px] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase text-slate-500">
+                    <span>Score</span>
+                    <span>Proxima acao</span>
+                    <span>SLA</span>
+                    <span>Status</span>
+                  </div>
+                  {dashboard.actionCommandCenter.actionQueue.map((item) => (
+                    <div className="grid grid-cols-[72px_1fr_120px_120px] gap-3 border-t border-slate-200 px-4 py-3 text-sm" key={item.id}>
+                      <strong className="text-emerald-800">{item.score}</strong>
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-semibold text-slate-950">{item.theme}</span>
+                          <Badge tone={item.priority === "Alta" ? "simulated" : "neutral"}>{item.priority}</Badge>
+                        </div>
+                        <p className="mt-1 leading-6 text-slate-700">{item.action}</p>
+                        <p className="mt-1 text-xs text-slate-500">Dono: {item.owner}</p>
+                      </div>
+                      <span className="text-slate-700">{item.dueIn}</span>
+                      <span className="font-medium text-slate-800">{item.stage}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <ClipboardCheck size={18} />
+                  <h3 className="font-semibold">Ritual semanal recomendado</h3>
+                </div>
+                <ol className="space-y-2 text-sm leading-6 text-slate-700">
+                  {dashboard.actionCommandCenter.weeklyRitual.map((step, index) => (
+                    <li className="flex gap-2" key={step}>
+                      <span className="grid size-6 shrink-0 place-items-center rounded-full bg-emerald-700 text-xs font-semibold text-white">
+                        {index + 1}
+                      </span>
+                      <span>{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </div>
+          </section>
 
           <section className="grid gap-6 lg:grid-cols-[1fr_360px]">
             <div className="panel">
@@ -376,6 +445,15 @@ function MetricCard({
       </div>
       <p className="mt-5 text-sm text-slate-600">{label}</p>
       <p className="mt-2 text-2xl font-semibold leading-tight text-slate-950">{value}</p>
+    </div>
+  );
+}
+
+function ActionMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+      <p className="text-xs font-semibold text-slate-500">{label}</p>
+      <p className="mt-1 text-lg font-semibold text-slate-950">{value}</p>
     </div>
   );
 }
