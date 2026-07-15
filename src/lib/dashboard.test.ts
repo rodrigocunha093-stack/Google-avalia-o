@@ -75,6 +75,14 @@ describe("dashboard", () => {
     expect(dashboard.reviewSamples.some((review) => review.text.toLowerCase().includes("carne"))).toBe(true);
   });
 
+  it("inclui avaliacoes de baixa classificacao para Cristo", () => {
+    const dashboard = getDemoDashboard({ store: "cristo" });
+
+    expect(dashboard.reviewSamples.some((review) => review.rating <= 2)).toBe(true);
+    expect(dashboard.reviewSamples.some((review) => review.text.toLowerCase().includes("acougue"))).toBe(true);
+    expect(dashboard.reviewSamples.some((review) => review.text.toLowerCase().includes("vencido"))).toBe(true);
+  });
+
   it("altera serie do grafico por periodo", () => {
     const dashboard = getDemoDashboard({ ratingPeriod: "mensal" });
 

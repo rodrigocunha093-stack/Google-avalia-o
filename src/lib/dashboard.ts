@@ -132,6 +132,12 @@ function themeDictionary() {
     ["promocoes", "Promocoes"],
     ["baratas", "Controle de pragas"],
     ["pombos", "Controle de pragas"],
+    ["validade", "Validade"],
+    ["vencido", "Validade"],
+    ["mofado", "Validade"],
+    ["geladeira", "Refrigeracao"],
+    ["rato", "Controle de pragas"],
+    ["recepcao", "Recepcao"],
   ] as const;
 }
 
