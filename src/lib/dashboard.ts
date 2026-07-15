@@ -14,6 +14,7 @@ export function getDemoDashboard(filters: {
   store?: string;
   period?: string;
   ratingPeriod?: string;
+  reviewTone?: string;
   theme?: string;
 }) {
   const stores = applyFilters(demoStores, filters);
@@ -31,6 +32,9 @@ export function getDemoDashboard(filters: {
   const reviewSamples = selectedTheme
     ? availableReviews.filter((review) => reviewMatchesTheme(review.text, selectedTheme))
     : availableReviews;
+  const filteredReviewSamples = filters.reviewTone === "negativas"
+    ? reviewSamples.filter((review) => review.rating <= 2)
+    : reviewSamples;
   const weeklyFeedbacks = simulatedWeeklyFeedbacks.filter((feedback) => {
     if (filters.store && feedback.storeId !== filters.store) return false;
     if (filters.period && feedback.period !== filters.period) return false;
@@ -45,7 +49,7 @@ export function getDemoDashboard(filters: {
 
   return {
     stores,
-    reviewSamples,
+    reviewSamples: filteredReviewSamples,
     selectedTheme: filters.theme,
     themes: identifyThemes(availableReviews.map((review) => review.text)),
     weeklyFeedbacks,
@@ -176,15 +180,7 @@ function parseRatingPeriod(value?: string): RatingTrendPeriod {
 }
 
 function buildActionCommandCenter(actionPlan: ActionPlanItem[], reviewSamples: PublicReviewSample[]) {
-  const actionQueue = actionPlan
-    .map((item) => ({
-      ...item,
-      score: actionScore(item),
-      slaStatus: item.dueIn.includes("48") ? "Critico" : item.dueIn.includes("7") ? "Esta semana" : "Monitorar",
-      stage: item.priority === "Alta" ? "Acionar hoje" : item.priority === "Media" ? "Planejar na semana" : "Acompanhar",
-    }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 6);
+  const groupedActions = buildGroupedActionQueue(actionPlan, reviewSamples);
 
   const negativeReviews = reviewSamples.filter((review) => review.rating <= 2);
   const topTheme = mostFrequent([
@@ -197,7 +193,7 @@ function buildActionCommandCenter(actionPlan: ActionPlanItem[], reviewSamples: P
     dueSoonActions: actionPlan.filter((item) => item.dueIn.includes("48") || item.dueIn.includes("7")).length,
     negativeFeedbacks: negativeReviews.length,
     topRiskTheme: topTheme ?? "Sem tema critico",
-    actionQueue,
+    actionQueue: groupedActions,
     weeklyRitual: [
       "Triar reclamacoes criticas por loja e tema",
       "Definir responsavel, prazo e evidencia esperada",
@@ -205,6 +201,67 @@ function buildActionCommandCenter(actionPlan: ActionPlanItem[], reviewSamples: P
       "Revisar recorrencia na reuniao semanal de gerentes",
     ],
   };
+}
+
+function buildGroupedActionQueue(actionPlan: ActionPlanItem[], reviewSamples: PublicReviewSample[]) {
+  const groups = new Map<string, {
+    theme: string;
+    priority: ActionPlanItem["priority"];
+    actions: ActionPlanItem[];
+    negativeReviews: PublicReviewSample[];
+  }>();
+
+  actionPlan.forEach((item) => {
+    const current = groups.get(item.theme) ?? {
+      theme: item.theme,
+      priority: item.priority,
+      actions: [],
+      negativeReviews: reviewSamples.filter((review) => review.rating <= 2 && reviewMatchesTheme(review.text, item.theme)),
+    };
+    current.actions.push(item);
+    current.priority = highestPriority(current.priority, item.priority);
+    groups.set(item.theme, current);
+  });
+
+  return Array.from(groups.values())
+    .map((group) => {
+      const score = group.actions.reduce((sum, item) => Math.max(sum, actionScore(item)), 0)
+        + group.negativeReviews.length * 20
+        + group.actions.length * 5;
+      const owners = uniqueCanonical(group.actions.map((item) => item.owner));
+      const earliestDue = group.actions.some((item) => item.dueIn.includes("48"))
+        ? "48 horas"
+        : group.actions.some((item) => item.dueIn.includes("7"))
+          ? "7 dias"
+          : group.actions[0]?.dueIn ?? "Monitorar";
+
+      return {
+        id: `tema-${normalize(group.theme).replace(/\s+/g, "-")}`,
+        theme: group.theme,
+        priority: group.priority,
+        score,
+        slaStatus: earliestDue.includes("48") ? "Critico" : earliestDue.includes("7") ? "Esta semana" : "Monitorar",
+        stage: group.priority === "Alta" ? "Acionar hoje" : group.priority === "Media" ? "Planejar na semana" : "Acompanhar",
+        dueIn: earliestDue,
+        owner: owners.join(" / "),
+        storesAffected: uniqueCanonical(group.actions.map((item) => inferStoreFromAction(item))).length,
+        negativeComments: group.negativeReviews.length,
+        evidence: uniqueCanonical(group.actions.map((item) => item.evidence)).slice(0, 2),
+        action: decisionForTheme(group.theme, group.negativeReviews.length),
+      };
+    })
+    .sort((a, b) => b.score - a.score || b.negativeComments - a.negativeComments || a.theme.localeCompare(b.theme))
+    .slice(0, 6);
+}
+
+function highestPriority(current: ActionPlanItem["priority"], next: ActionPlanItem["priority"]) {
+  const order = { Baixa: 1, Media: 2, Alta: 3 };
+  return order[next] > order[current] ? next : current;
+}
+
+function inferStoreFromAction(item: ActionPlanItem) {
+  const match = item.id.match(/^acao-([a-z-]+)/);
+  return match?.[1] ?? item.theme;
 }
 
 function buildThemeDecisionReport(reviews: PublicReviewSample[]) {

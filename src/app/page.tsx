@@ -35,9 +35,11 @@ export default async function Home({
     rating: asString(params.rating),
     period: asString(params.period),
     ratingPeriod: asString(params.ratingPeriod),
+    reviewTone: asString(params.reviewTone),
     theme: asString(params.theme),
   });
   const selectedTheme = asString(params.theme);
+  const reviewTone = asString(params.reviewTone);
 
   return (
     <main className="min-h-screen bg-[#f8faf9] text-slate-950">
@@ -198,15 +200,16 @@ export default async function Home({
 
             <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_340px]">
               <div className="overflow-x-auto rounded-md border border-slate-200">
-                <div className="min-w-[720px]">
-                  <div className="grid grid-cols-[72px_1fr_120px_120px] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase text-slate-500">
+                <div className="min-w-[760px]">
+                  <div className="grid grid-cols-[72px_1fr_120px_120px_130px] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase text-slate-500">
                     <span>Score</span>
-                    <span>Proxima acao</span>
+                    <span>Tema e origem</span>
                     <span>SLA</span>
                     <span>Status</span>
+                    <span>Reclamacoes</span>
                   </div>
                   {dashboard.actionCommandCenter.actionQueue.map((item) => (
-                    <div className="grid grid-cols-[72px_1fr_120px_120px] gap-3 border-t border-slate-200 px-4 py-3 text-sm" key={item.id}>
+                    <div className="grid grid-cols-[72px_1fr_120px_120px_130px] gap-3 border-t border-slate-200 px-4 py-3 text-sm" key={item.id}>
                       <strong className="text-emerald-800">{item.score}</strong>
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
@@ -214,10 +217,21 @@ export default async function Home({
                         <Badge tone={item.priority === "Alta" ? "real" : "neutral"}>{item.priority}</Badge>
                         </div>
                         <p className="mt-1 leading-6 text-slate-700">{item.action}</p>
-                        <p className="mt-1 text-xs text-slate-500">Dono: {item.owner}</p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {item.storesAffected} loja(s) afetada(s) · {item.negativeComments} reclamacao(oes) de origem
+                        </p>
+                        <ul className="mt-2 space-y-1 text-xs leading-5 text-slate-600">
+                          {item.evidence.map((evidence) => (
+                            <li key={evidence}>Evidencia: {evidence}</li>
+                          ))}
+                        </ul>
+                        <p className="mt-2 text-xs text-slate-500">Dono: {item.owner}</p>
                       </div>
                       <span className="text-slate-700">{item.dueIn}</span>
                       <span className="font-medium text-slate-800">{item.stage}</span>
+                      <Link className="font-semibold text-emerald-800 hover:underline" href={hrefWithParams(params, { reviewTone: "negativas", theme: item.theme })}>
+                        Ver origem
+                      </Link>
                     </div>
                   ))}
                 </div>
@@ -299,8 +313,9 @@ export default async function Home({
                 <div className="mb-4 flex flex-wrap items-center gap-2 rounded-md bg-emerald-50 p-3 text-sm text-emerald-950">
                   <span>Filtrando comentarios por tema:</span>
                   <Badge tone="real">{selectedTheme}</Badge>
-                  <Link className="font-semibold text-emerald-800 hover:underline" href={hrefWithoutParam(params, "theme")}>
-                    Limpar tema
+                  {reviewTone === "negativas" && <Badge tone="real">Somente reclamacoes</Badge>}
+                  <Link className="font-semibold text-emerald-800 hover:underline" href={hrefWithoutParams(params, ["theme", "reviewTone"])}>
+                    Limpar filtro
                   </Link>
                 </div>
               )}
@@ -525,14 +540,34 @@ function hrefWithParam(
   return `/?${next.toString()}`;
 }
 
-function hrefWithoutParam(
+function hrefWithParams(
   params: Record<string, string | string[] | undefined>,
-  key: string,
+  values: Record<string, string>,
 ) {
   const next = new URLSearchParams();
   Object.entries(params).forEach(([entryKey, entryValue]) => {
     const normalized = asString(entryValue);
-    if (normalized && entryKey !== key) next.set(entryKey, normalized);
+    if (normalized && !(entryKey in values)) next.set(entryKey, normalized);
+  });
+  Object.entries(values).forEach(([key, value]) => next.set(key, value));
+  return `/?${next.toString()}`;
+}
+
+function hrefWithoutParam(
+  params: Record<string, string | string[] | undefined>,
+  key: string,
+) {
+  return hrefWithoutParams(params, [key]);
+}
+
+function hrefWithoutParams(
+  params: Record<string, string | string[] | undefined>,
+  keys: string[],
+) {
+  const next = new URLSearchParams();
+  Object.entries(params).forEach(([entryKey, entryValue]) => {
+    const normalized = asString(entryValue);
+    if (normalized && !keys.includes(entryKey)) next.set(entryKey, normalized);
   });
   const query = next.toString();
   return query ? `/?${query}` : "/";

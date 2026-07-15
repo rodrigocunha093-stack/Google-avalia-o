@@ -47,12 +47,15 @@ describe("dashboard", () => {
 
   it("monta uma central de acao com fila priorizada", () => {
     const dashboard = getDemoDashboard({});
+    const queueThemes = dashboard.actionCommandCenter.actionQueue.map((item) => item.theme);
 
     expect(dashboard.actionCommandCenter.criticalActions).toBeGreaterThan(0);
     expect(dashboard.actionCommandCenter.dueSoonActions).toBeGreaterThan(0);
     expect(dashboard.actionCommandCenter.actionQueue[0]?.score).toBeGreaterThanOrEqual(
       dashboard.actionCommandCenter.actionQueue.at(-1)?.score ?? 0,
     );
+    expect(new Set(queueThemes).size).toBe(queueThemes.length);
+    expect(dashboard.actionCommandCenter.actionQueue.some((item) => item.negativeComments > 0)).toBe(true);
     expect(dashboard.actionCommandCenter.weeklyRitual).toContain("Definir responsavel, prazo e evidencia esperada");
   });
 
@@ -61,6 +64,13 @@ describe("dashboard", () => {
 
     expect(dashboard.reviewSamples.length).toBeGreaterThan(0);
     expect(dashboard.reviewSamples.every((review) => review.text.toLowerCase().includes("fila"))).toBe(true);
+  });
+
+  it("filtra reclamacoes que originam uma acao por tema", () => {
+    const dashboard = getDemoDashboard({ reviewTone: "negativas", theme: "Validade" });
+
+    expect(dashboard.reviewSamples.length).toBeGreaterThan(0);
+    expect(dashboard.reviewSamples.every((review) => review.rating <= 2)).toBe(true);
   });
 
   it("mantem temas identificados sem duplicidade para chaves estaveis na interface", () => {
