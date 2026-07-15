@@ -30,7 +30,8 @@ export function RatingTrendChart({
         <div>
           <h2 className="text-xl font-semibold">Nota por periodo</h2>
           <p className="mt-1 text-sm text-slate-600">
-            Visualizacao {periodLabel(period)} da esquerda para a direita: periodo mais antigo ate o periodo atual.
+            Grafico simulado para demonstrar a visualizacao {periodLabel(period)}. Os dados reais por periodo dependem
+            da autorizacao do Google Business Profile ou importacao oficial do cliente.
           </p>
         </div>
         <Badge tone="simulated">Demonstracao simulada</Badge>
@@ -72,9 +73,9 @@ export function RatingTrendChart({
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <Summary label="Media do periodo" value={formatRating(average(points.map((point) => point.rating)))} />
-        <Summary label="Maior nota" value={formatRating(Math.max(...points.map((point) => point.rating)))} />
-        <Summary label="Avaliacoes no periodo" value={points.reduce((sum, point) => sum + point.reviews, 0).toLocaleString("pt-BR")} />
+        <Summary label="Media simulada do periodo" value={formatRating(average(points.map((point) => point.rating)))} />
+        <Summary label="Maior nota simulada" value={formatRating(Math.max(...points.map((point) => point.rating)))} />
+        <Summary label="Avaliacoes simuladas no periodo" value={points.reduce((sum, point) => sum + point.reviews, 0).toLocaleString("pt-BR")} />
       </div>
     </section>
   );
