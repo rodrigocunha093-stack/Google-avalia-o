@@ -59,6 +59,15 @@ describe("dashboard", () => {
     expect(dashboard.actionCommandCenter.weeklyRitual).toContain("Definir responsavel, prazo e evidencia esperada");
   });
 
+  it("apresenta decisao executiva antes dos comentarios", () => {
+    const dashboard = getDemoDashboard({});
+
+    expect(dashboard.executiveDecision.primaryAction).toContain(":");
+    expect(dashboard.executiveDecision.primaryTheme).not.toBe("Sem tema critico");
+    expect(dashboard.executiveDecision.primaryStore).not.toBe("Sem loja critica");
+    expect(dashboard.executiveDecision.evidenceCount).toBeGreaterThan(0);
+  });
+
   it("filtra comentarios disponiveis por tema", () => {
     const dashboard = getDemoDashboard({ theme: "Filas" });
 

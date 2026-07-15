@@ -118,6 +118,46 @@ export default async function Home({
         </aside>
 
         <div className="space-y-6">
+          <section className="panel border-emerald-200 bg-emerald-50/30">
+            <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+              <div className="max-w-4xl">
+                <Badge tone="real">Painel de decisao</Badge>
+                <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
+                  O que a rede deve resolver primeiro
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-slate-700">
+                  {dashboard.executiveDecision.mission} Os comentarios ficam como fonte primaria e evidencia; a tela principal mostra a decisao.
+                </p>
+              </div>
+              <Link className="btn-primary" href={hrefWithParams(params, { reviewTone: "negativas", theme: dashboard.executiveDecision.primaryTheme })}>
+                Ver evidencias
+                <ArrowUpRight size={16} />
+              </Link>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
+              <div className="rounded-md border border-emerald-200 bg-white p-4">
+                <p className="text-xs font-semibold uppercase text-emerald-800">Acao recomendada agora</p>
+                <h3 className="mt-2 text-lg font-semibold leading-7 text-slate-950">
+                  {dashboard.executiveDecision.primaryAction}
+                </h3>
+                <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+                  <DecisionMiniCard label="Tema critico" value={dashboard.executiveDecision.primaryTheme} />
+                  <DecisionMiniCard label="Loja em foco" value={dashboard.executiveDecision.primaryStore} />
+                  <DecisionMiniCard label="Evidencias negativas" value={dashboard.executiveDecision.evidenceCount.toString()} />
+                </div>
+              </div>
+
+              <div className="rounded-md border border-slate-200 bg-white p-4">
+                <p className="text-xs font-semibold uppercase text-slate-500">Como o cliente enxerga</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">{dashboard.executiveDecision.customerView}</p>
+                <p className="mt-4 rounded-md bg-slate-50 p-3 text-sm leading-6 text-slate-700">
+                  Base da prioridade: {dashboard.executiveDecision.whyItMatters}
+                </p>
+              </div>
+            </div>
+          </section>
+
           <section className="panel">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -518,6 +558,15 @@ function ActionMetric({ label, value }: { label: string; value: string }) {
     <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
       <p className="text-xs font-semibold text-slate-500">{label}</p>
       <p className="mt-1 text-lg font-semibold text-slate-950">{value}</p>
+    </div>
+  );
+}
+
+function DecisionMiniCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+      <p className="text-xs font-semibold text-slate-500">{label}</p>
+      <p className="mt-1 font-semibold text-slate-950">{value}</p>
     </div>
   );
 }

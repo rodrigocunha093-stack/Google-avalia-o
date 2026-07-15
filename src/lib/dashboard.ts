@@ -46,6 +46,7 @@ export function getDemoDashboard(filters: {
   const actionCommandCenter = buildActionCommandCenter(actionPlan, reviewSamples);
   const themeDecisionReport = buildThemeDecisionReport(availableReviews);
   const storeDecisionReport = buildStoreDecisionReport(stores);
+  const executiveDecision = buildExecutiveDecision(actionCommandCenter.actionQueue, themeDecisionReport, storeDecisionReport);
 
   return {
     stores,
@@ -55,6 +56,7 @@ export function getDemoDashboard(filters: {
     weeklyFeedbacks,
     actionPlan,
     actionCommandCenter,
+    executiveDecision,
     themeDecisionReport,
     storeDecisionReport,
     ratingTrend: getSimulatedRatingTrend(ratingPeriod, filters.store),
@@ -177,6 +179,31 @@ function uniqueCanonical(values: string[]) {
 function parseRatingPeriod(value?: string): RatingTrendPeriod {
   if (value === "mensal" || value === "anual") return value;
   return "semanal";
+}
+
+function buildExecutiveDecision(
+  actionQueue: ReturnType<typeof buildGroupedActionQueue>,
+  themeDecisionReport: ReturnType<typeof buildThemeDecisionReport>,
+  storeDecisionReport: ReturnType<typeof buildStoreDecisionReport>,
+) {
+  const topAction = actionQueue[0];
+  const topTheme = themeDecisionReport[0];
+  const topStore = storeDecisionReport[0];
+
+  return {
+    mission: "Entender como a loja e enxergada pelo cliente e transformar essa percepcao em acoes priorizadas.",
+    primaryAction: topAction?.action ?? "Nenhuma acao critica encontrada nos dados acessados.",
+    primaryTheme: topAction?.theme ?? topTheme?.theme ?? "Sem tema critico",
+    primaryStore: topStore?.neighborhood ?? "Sem loja critica",
+    evidenceCount: topAction?.negativeComments ?? topTheme?.negativeComments ?? 0,
+    whyItMatters: topTheme
+      ? `${topTheme.negativeComments} comentario(s) negativo(s), ${topTheme.mentions} mencao(oes) e ${topTheme.affectedStores} loja(s) afetada(s).`
+      : "Sem volume suficiente de evidencias nos comentarios acessados.",
+    customerView: themeDecisionReport
+      .slice(0, 3)
+      .map((item) => `${item.theme}: ${item.priority.toLowerCase()} prioridade`)
+      .join(" | "),
+  };
 }
 
 function buildActionCommandCenter(actionPlan: ActionPlanItem[], reviewSamples: PublicReviewSample[]) {
