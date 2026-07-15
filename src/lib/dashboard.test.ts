@@ -19,6 +19,20 @@ describe("dashboard", () => {
     expect(dashboard.futureWeeklyReport.every((metric) => metric.dataSource === "DEMO_SIMULATED")).toBe(true);
   });
 
+  it("usa os dados publicos informados manualmente para lojas revisadas", () => {
+    const dashboard = getDemoDashboard({});
+    const byId = new Map(dashboard.stores.map((store) => [store.id, store]));
+
+    expect(byId.get("bairro-dos-estados")?.rating).toBe(4.3);
+    expect(byId.get("bairro-dos-estados")?.userRatingCount).toBe(5112);
+    expect(byId.get("manaira")?.rating).toBe(4.5);
+    expect(byId.get("manaira")?.userRatingCount).toBe(2888);
+    expect(byId.get("mega-atacarejo")?.rating).toBe(4.3);
+    expect(byId.get("mega-atacarejo")?.userRatingCount).toBe(909);
+    expect(byId.get("altiplano")?.rating).toBe(4.4);
+    expect(byId.get("altiplano")?.userRatingCount).toBe(92);
+  });
+
   it("filtra feedbacks simulados por ultima semana e tema", () => {
     const dashboard = getDemoDashboard({ period: "ultima-semana", theme: "Filas" });
 

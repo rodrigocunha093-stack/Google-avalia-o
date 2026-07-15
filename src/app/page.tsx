@@ -72,19 +72,19 @@ export default async function Home({
           icon={<Building2 size={20} />}
           label="Unidades encontradas"
           value={dashboard.summary.unitsFound.toString()}
-          badge="Dado publico real"
+          badge="Dado publico informado"
         />
         <MetricCard
           icon={<Star size={20} />}
           label="Nota media ponderada"
           value={formatRating(dashboard.summary.weightedAverageRating)}
-          badge="Dado publico real"
+          badge="Dado publico informado"
         />
         <MetricCard
           icon={<MessageSquareText size={20} />}
           label="Total publico de avaliacoes"
           value={formatNumber(dashboard.summary.totalReviews)}
-          badge="Dado publico real"
+          badge="Dado publico informado"
         />
         <MetricCard
           icon={<TrendingUp size={20} />}
@@ -121,10 +121,10 @@ export default async function Home({
               <div>
                 <h2 className="text-xl font-semibold">Comparativo das lojas</h2>
                 <p className="text-sm text-slate-600">
-                  Dados publicos retornados pela Places API ou seed local da demonstracao.
+                  Dados publicos informados manualmente para a demonstracao; confirmar via Places API ou Google Business Profile antes de producao.
                 </p>
               </div>
-              <Badge tone="real">Dado publico real</Badge>
+              <Badge tone="neutral">Dado publico informado</Badge>
             </div>
             <div className="overflow-x-auto">
               <table className="data-table">
@@ -372,7 +372,7 @@ function MetricCard({
     <div className="panel min-h-36">
       <div className="flex items-center justify-between gap-3 text-emerald-800">
         {icon}
-        <Badge tone={badge === "Dado publico real" ? "real" : "neutral"}>{badge}</Badge>
+        <Badge tone="neutral">{badge}</Badge>
       </div>
       <p className="mt-5 text-sm text-slate-600">{label}</p>
       <p className="mt-2 text-2xl font-semibold leading-tight text-slate-950">{value}</p>

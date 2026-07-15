@@ -18,7 +18,7 @@ export const TARGET_QUERIES = [
 ];
 
 export const demoStores: PublicStore[] = [
-  store("bairro-dos-estados", "Supermercado Menor Preco - Bairro dos Estados", "Bairro dos Estados", 4.6, 1830, -7.1011, -34.8479, [
+  store("bairro-dos-estados", "Supermercado Rede Menor Preco - Bairro dos Estados", "Bairro dos Estados", 4.3, 5112, -7.1011, -34.8479, [
     review("bairro-dos-estados", "francisco nilton sousa", 2, "Atendimento muito demorado no caixa, segurando a clientela e atrasando o atendimento mesmo apos comunicacao ao fiscal de caixa."),
     review("bairro-dos-estados", "Sabrina Araujo", 1, "Cliente relata falta de seguranca no estacionamento, furto de capacete preso na moto e ausencia de cameras externas."),
     review("bairro-dos-estados", "Iranilson Buriti de Oliveira", 2, "Quase todas as compras tem algum produto com valor maior que o da etiqueta. Cliente precisa enfrentar fila para receber diferenca de volta."),
@@ -28,7 +28,7 @@ export const demoStores: PublicStore[] = [
     review("bairro-dos-estados", "Filipe Falcao", 1, "Cliente relata ovos estragados com frequencia, mesmo dentro da validade, e deixou de comprar ovos no local."),
     review("bairro-dos-estados", "aeciio matheuslucas", 2, "Pessimo atendimento, filas enormes no acougue e nos lacticinios, alem de falta de seguranca no estacionamento."),
   ]),
-  store("manaira", "Supermercado Menor Preco - Manaira", "Manaira", 4.5, 2490, -7.0974, -34.8342, [
+  store("manaira", "Rede Menor Preco - Manaira", "Manaira", 4.5, 2888, -7.0974, -34.8342, [
     review("manaira", "Beatriz Sa", 2, "Cliente nao ve vantagem em ir a loja e relata que os precos, no geral, sao mais elevados que os do concorrente proximo."),
     review("manaira", "Miguel Stalyt", 1, "Reclamacao sobre atendimento na portaria da unidade Manaira, com ocorrencia registrada em horario noturno."),
     review("manaira", "Sabrina Araujo", 1, "Cliente relata falta de preparo e capacitacao dos segurancas, com constrangimentos durante as compras."),
@@ -42,7 +42,7 @@ export const demoStores: PublicStore[] = [
   store("intermares", "Supermercado Menor Preco - Intermares", "Intermares", 4.7, 1652, -7.0431, -34.8424),
   store("cristo", "Supermercado Menor Preco - Cristo", "Cristo", 4.4, 1218, -7.1458, -34.8756),
   store("torre", "Supermercado Menor Preco - Torre", "Torre", 4.6, 1432, -7.1195, -34.8611),
-  store("altiplano", "Supermercado Menor Preco - Altiplano", "Altiplano", 4.6, 1540, -7.1342, -34.8214, [
+  store("altiplano", "Supermercado Menor Preco - Altiplano", "Altiplano", 4.4, 92, -7.1342, -34.8214, [
     review("altiplano", "Wagner M Souza", 2, "Pequeno. Com muitas promocoes no encarte, mas com limitacao de quantidades por cliente. Atrai pelo preco, mas nao permite comprar livremente."),
     review("altiplano", "Mateus Leite Arnaud", 1, "Pior sistema de autoatendimento que voce vai encontrar. Nao funciona nem com o proprio funcionario treinado para usa-lo."),
     review("altiplano", "Uly Diniz", 1, "Comprei carne e notei moscas dentro da embalagem. Ao devolver, o gerente nao foi agradavel. Outros funcionarios foram educados, mas o setor de carnes tinha moscas voando."),
@@ -50,7 +50,7 @@ export const demoStores: PublicStore[] = [
     review("altiplano", "Andre Fernandes", 3, "Estacionamento com pouca sombra. Foi dificil encontrar uma vaga protegida do sol."),
     review("altiplano", "Barreto", 3, "Loja organizada, limpa e bem sinalizada, mas alguns produtos estavam mais caros que na regiao e faltavam itens basicos."),
   ]),
-  store("mega-atacarejo", "Mega Atacarejo - Joao Pessoa", "Joao Pessoa", 4.3, 3110, -7.1582, -34.8428),
+  store("mega-atacarejo", "Mega Atacarejo - Joao Pessoa", "Joao Pessoa", 4.3, 909, -7.1582, -34.8428),
 ];
 
 export const simulatedConnectedMetrics: DemoWeeklyMetric[] = [
