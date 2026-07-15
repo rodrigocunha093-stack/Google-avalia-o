@@ -1,0 +1,249 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum DataSource {
+  GOOGLE_PLACES_PUBLIC
+  DEMO_SIMULATED
+  GOOGLE_BUSINESS_PROFILE_AUTHORIZED
+}
+
+enum RoleName {
+  ADMIN
+  COMMERCIAL
+  MANAGER
+  VIEWER
+}
+
+enum SyncStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+  PARTIAL
+}
+
+model Store {
+  id              String              @id @default(cuid())
+  slug            String              @unique
+  internalName    String
+  neighborhood    String?
+  dataSource      DataSource          @default(GOOGLE_PLACES_PUBLIC)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  publicPlaceData PublicPlaceData?
+  links           StoreLocationLink[]
+  reviews         Review[]
+  weeklyReports   WeeklyReport[]
+
+  @@map("stores")
+}
+
+model PublicPlaceData {
+  id                  String               @id @default(cuid())
+  storeId             String               @unique
+  placeId             String               @unique
+  displayName         String
+  formattedAddress    String?
+  nationalPhoneNumber String?
+  websiteUri          String?
+  googleMapsUri       String?
+  rating              Float?
+  userRatingCount     Int?
+  regularOpeningHours Json?
+  businessStatus      String?
+  latitude            Float?
+  longitude           Float?
+  rawPayload          Json?
+  dataSource          DataSource           @default(GOOGLE_PLACES_PUBLIC)
+  fetchedAt           DateTime             @default(now())
+  store               Store                @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  reviewSamples       PublicReviewSample[]
+
+  @@map("public_place_data")
+}
+
+model PublicReviewSample {
+  id                             String          @id @default(cuid())
+  publicPlaceDataId              String
+  authorName                     String?
+  rating                         Int?
+  text                           String?
+  relativePublishTimeDescription String?
+  publishTime                    DateTime?
+  rawPayload                     Json?
+  dataSource                     DataSource      @default(GOOGLE_PLACES_PUBLIC)
+  publicPlaceData                PublicPlaceData @relation(fields: [publicPlaceDataId], references: [id], onDelete: Cascade)
+
+  @@map("public_review_samples")
+}
+
+model GoogleConnection {
+  id                    String            @id @default(cuid())
+  userId                String
+  providerAccountEmail  String?
+  encryptedAccessToken  String
+  encryptedRefreshToken String?
+  tokenExpiresAt        DateTime?
+  scopes                String
+  status                String            @default("CONNECTED")
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  disconnectedAt        DateTime?
+  user                  User              @relation(fields: [userId], references: [id])
+  accounts              GoogleAccount[]
+  synchronizationJobs   SynchronizationJob[]
+
+  @@map("google_connections")
+}
+
+model GoogleAccount {
+  id                   String           @id @default(cuid())
+  googleConnectionId   String
+  googleAccountName    String
+  displayName          String?
+  type                 String?
+  rawPayload           Json?
+  connection           GoogleConnection @relation(fields: [googleConnectionId], references: [id], onDelete: Cascade)
+  locations            GoogleLocation[]
+
+  @@map("google_accounts")
+}
+
+model GoogleLocation {
+  id                String              @id @default(cuid())
+  googleAccountId   String
+  googleLocationName String
+  title             String?
+  storeCode         String?
+  metadata          Json?
+  rawPayload        Json?
+  account           GoogleAccount       @relation(fields: [googleAccountId], references: [id], onDelete: Cascade)
+  links             StoreLocationLink[]
+  reviews           Review[]
+
+  @@map("google_locations")
+}
+
+model StoreLocationLink {
+  id               String         @id @default(cuid())
+  storeId          String
+  googleLocationId String
+  linkedByUserId   String?
+  createdAt        DateTime       @default(now())
+  store            Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  googleLocation   GoogleLocation @relation(fields: [googleLocationId], references: [id], onDelete: Cascade)
+  linkedBy         User?          @relation(fields: [linkedByUserId], references: [id])
+
+  @@unique([storeId, googleLocationId])
+  @@map("store_location_links")
+}
+
+model Review {
+  id                   String          @id @default(cuid())
+  storeId              String
+  googleLocationId     String?
+  googleReviewName     String?         @unique
+  reviewerDisplayName  String?
+  rating               Int?
+  comment              String?
+  createTime           DateTime?
+  updateTime           DateTime?
+  replyText            String?
+  replyUpdateTime      DateTime?
+  isAnswered           Boolean         @default(false)
+  topics               Json?
+  sentiment            String?
+  dataSource           DataSource      @default(GOOGLE_BUSINESS_PROFILE_AUTHORIZED)
+  rawPayload           Json?
+  store                Store           @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  googleLocation       GoogleLocation? @relation(fields: [googleLocationId], references: [id])
+
+  @@map("reviews")
+}
+
+model SynchronizationJob {
+  id                 String            @id @default(cuid())
+  googleConnectionId String
+  storeId            String?
+  googleLocationName String?
+  status             SyncStatus         @default(PENDING)
+  cursor             String?
+  startedAt          DateTime?
+  finishedAt         DateTime?
+  errorMessage       String?
+  itemsProcessed     Int                @default(0)
+  logs               Json?
+  connection         GoogleConnection   @relation(fields: [googleConnectionId], references: [id], onDelete: Cascade)
+
+  @@map("synchronization_jobs")
+}
+
+model WeeklyReport {
+  id                    String     @id @default(cuid())
+  storeId               String
+  weekStart             DateTime
+  weekEnd               DateTime
+  newReviews            Int
+  averageRating         Float?
+  previousAverageRating Float?
+  negativeReviews       Int
+  responseRate          Float?
+  recurringComplaints   Json?
+  recurringPraise       Json?
+  pendingReplies        Int
+  dataSource            DataSource @default(GOOGLE_BUSINESS_PROFILE_AUTHORIZED)
+  createdAt             DateTime   @default(now())
+  store                 Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, weekStart])
+  @@map("weekly_reports")
+}
+
+model User {
+  id                  String              @id @default(cuid())
+  email               String              @unique
+  name                String?
+  createdAt           DateTime            @default(now())
+  roles               UserRole[]
+  googleConnections   GoogleConnection[]
+  storeLocationLinks  StoreLocationLink[]
+  auditLogs           AuditLog[]
+
+  @@map("users")
+}
+
+model Role {
+  id    String   @id @default(cuid())
+  name  RoleName @unique
+  users UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  userId String
+  roleId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
