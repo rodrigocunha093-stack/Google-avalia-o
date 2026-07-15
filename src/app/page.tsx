@@ -141,7 +141,7 @@ export default async function Home({
                 </div>
               </section>
 
-              <ThemeDecisionTable items={dashboard.themeDecisionReport.slice(0, 5)} title="Temas criticos" />
+              <ThemeDecisionTable items={dashboard.themeDecisionReport} title="Temas criticos" />
             </div>
           )}
 
@@ -594,7 +594,39 @@ function ThemeDecisionTable({
                 <td>{item.mentions}</td>
                 {showAverage && <td>{formatRating(item.averageRating)}</td>}
                 <td>{item.affectedStores}</td>
-                <td className="min-w-[280px] text-sm leading-6 text-slate-700">{item.decision}</td>
+                <td className="min-w-[360px] text-sm leading-6 text-slate-700">
+                  <p>{item.decision}</p>
+                  <details className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-3">
+                    <summary className="cursor-pointer text-sm font-semibold text-emerald-800">
+                      Detalhar tema e comentarios de origem
+                    </summary>
+                    <div className="mt-3 space-y-3">
+                      <p className="text-xs leading-5 text-slate-600">
+                        Score calculado por comentarios negativos, mencoes totais, lojas afetadas e peso de risco operacional do tema.
+                      </p>
+                      <div className="grid gap-2 text-xs text-slate-700 sm:grid-cols-4">
+                        <span>Negativos: <strong>{item.negativeComments}</strong></span>
+                        <span>Mencoes: <strong>{item.mentions}</strong></span>
+                        <span>Lojas: <strong>{item.affectedStores}</strong></span>
+                        <span>Nota media: <strong>{formatRating(item.averageRating)}</strong></span>
+                      </div>
+                      <div className="space-y-2">
+                        {item.evidenceReviews.map((review) => (
+                          <article className="rounded-md border border-slate-200 bg-white p-2" key={review.id}>
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <strong className="text-xs text-slate-950">{review.authorName}</strong>
+                              <span className="text-xs font-semibold text-amber-700">{review.rating}/5</span>
+                            </div>
+                            <p className="mt-1 text-xs leading-5 text-slate-700">{review.text}</p>
+                          </article>
+                        ))}
+                        {item.evidenceReviews.length === 0 && (
+                          <p className="text-xs text-slate-500">Sem comentarios negativos associados nos dados acessados.</p>
+                        )}
+                      </div>
+                    </div>
+                  </details>
+                </td>
               </tr>
             ))}
           </tbody>

@@ -113,8 +113,11 @@ describe("dashboard", () => {
     const highPriorityThemes = dashboard.themeDecisionReport
       .filter((item) => item.priority === "Alta")
       .map((item) => item.theme);
+    const priceTheme = dashboard.themeDecisionReport.find((item) => item.theme === "Preco");
 
     expect(highPriorityThemes).toContain("Validade");
+    expect(priceTheme?.evidenceReviews.length).toBeGreaterThan(0);
+    expect(priceTheme?.evidenceReviews.every((review) => review.rating <= 2)).toBe(true);
     expect(dashboard.themeDecisionReport[0]?.score).toBeGreaterThanOrEqual(
       dashboard.themeDecisionReport.at(-1)?.score ?? 0,
     );

@@ -355,6 +355,7 @@ function inferStoreFromAction(item: ActionPlanItem) {
 
 function buildThemeDecisionReport(reviews: PublicReviewSample[]) {
   const rows = new Map<string, {
+    evidenceReviews: PublicReviewSample[];
     theme: string;
     mentions: number;
     negativeComments: number;
@@ -365,6 +366,7 @@ function buildThemeDecisionReport(reviews: PublicReviewSample[]) {
   reviews.forEach((review) => {
     identifyThemes([review.text]).forEach((theme) => {
       const row = rows.get(theme) ?? {
+        evidenceReviews: [],
         theme,
         mentions: 0,
         negativeComments: 0,
@@ -374,7 +376,10 @@ function buildThemeDecisionReport(reviews: PublicReviewSample[]) {
       row.mentions += 1;
       row.ratingSum += review.rating;
       row.stores.add(review.storeId);
-      if (review.rating <= 2) row.negativeComments += 1;
+      if (review.rating <= 2) {
+        row.negativeComments += 1;
+        row.evidenceReviews.push(review);
+      }
       rows.set(theme, row);
     });
   });
@@ -388,13 +393,13 @@ function buildThemeDecisionReport(reviews: PublicReviewSample[]) {
         negativeComments: row.negativeComments,
         affectedStores: row.stores.size,
         averageRating: row.ratingSum / Math.max(row.mentions, 1),
+        evidenceReviews: row.evidenceReviews.slice(0, 5),
         score,
         priority: score >= 75 || row.negativeComments >= 2 ? "Alta" : score >= 45 ? "Media" : "Baixa",
         decision: decisionForTheme(row.theme, row.negativeComments),
       };
     })
-    .sort((a, b) => b.score - a.score || b.negativeComments - a.negativeComments || a.theme.localeCompare(b.theme))
-    .slice(0, 8);
+    .sort((a, b) => b.score - a.score || b.negativeComments - a.negativeComments || a.theme.localeCompare(b.theme));
 }
 
 function buildStoreDecisionReport(stores: PublicStore[]) {
