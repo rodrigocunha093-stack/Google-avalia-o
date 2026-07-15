@@ -40,6 +40,7 @@ export function getDemoDashboard(filters: {
 
   const actionPlan = simulatedActionPlan.filter((item) => !filters.theme || item.theme === filters.theme);
   const actionCommandCenter = buildActionCommandCenter(actionPlan, reviewSamples);
+  const themeDecisionReport = buildThemeDecisionReport(availableReviews);
 
   return {
     stores,
@@ -49,6 +50,7 @@ export function getDemoDashboard(filters: {
     weeklyFeedbacks,
     actionPlan,
     actionCommandCenter,
+    themeDecisionReport,
     ratingTrend: getSimulatedRatingTrend(ratingPeriod, filters.store),
     ratingPeriod,
     futureWeeklyReport: simulatedConnectedMetrics,
@@ -98,18 +100,13 @@ function applyFilters(
 function identifyThemes(texts: string[]) {
   const dictionary = themeDictionary();
 
-  return dictionary
+  return uniqueCanonical(dictionary
     .filter(([needle]) => texts.some((text) => normalize(text).includes(needle)))
-    .map(([, label]) => label)
-    .filter((label, index, labels) => labels.indexOf(label) === index);
+    .map(([, label]) => label));
 }
 
 function reviewMatchesTheme(text: string, theme: string) {
-  const dictionary = themeDictionary();
-  const normalizedTheme = normalize(theme);
-  const themeEntry = dictionary.find(([, label]) => normalize(label) === normalizedTheme);
-  const needle = themeEntry?.[0] ?? normalizedTheme;
-  return normalize(text).includes(needle);
+  return identifyThemes([text]).some((label) => normalize(label) === normalize(theme));
 }
 
 function themeDictionary() {
@@ -159,7 +156,16 @@ function normalize(value: string) {
 }
 
 function unique(values: string[]) {
-  return Array.from(new Set(values)).sort((a, b) => a.localeCompare(b));
+  return uniqueCanonical(values).sort((a, b) => a.localeCompare(b));
+}
+
+function uniqueCanonical(values: string[]) {
+  const byKey = new Map<string, string>();
+  values.forEach((value) => {
+    const key = normalize(value);
+    if (!byKey.has(key)) byKey.set(key, value);
+  });
+  return Array.from(byKey.values());
 }
 
 function parseRatingPeriod(value?: string): RatingTrendPeriod {
@@ -197,6 +203,82 @@ function buildActionCommandCenter(actionPlan: ActionPlanItem[], reviewSamples: P
       "Revisar recorrencia na reuniao semanal de gerentes",
     ],
   };
+}
+
+function buildThemeDecisionReport(reviews: PublicReviewSample[]) {
+  const rows = new Map<string, {
+    theme: string;
+    mentions: number;
+    negativeComments: number;
+    stores: Set<string>;
+    ratingSum: number;
+  }>();
+
+  reviews.forEach((review) => {
+    identifyThemes([review.text]).forEach((theme) => {
+      const row = rows.get(theme) ?? {
+        theme,
+        mentions: 0,
+        negativeComments: 0,
+        stores: new Set<string>(),
+        ratingSum: 0,
+      };
+      row.mentions += 1;
+      row.ratingSum += review.rating;
+      row.stores.add(review.storeId);
+      if (review.rating <= 2) row.negativeComments += 1;
+      rows.set(theme, row);
+    });
+  });
+
+  return Array.from(rows.values())
+    .map((row) => {
+      const score = row.negativeComments * 35 + row.mentions * 8 + row.stores.size * 5 + themeRiskWeight(row.theme);
+      return {
+        theme: row.theme,
+        mentions: row.mentions,
+        negativeComments: row.negativeComments,
+        affectedStores: row.stores.size,
+        averageRating: row.ratingSum / Math.max(row.mentions, 1),
+        score,
+        priority: score >= 75 || row.negativeComments >= 2 ? "Alta" : score >= 45 ? "Media" : "Baixa",
+        decision: decisionForTheme(row.theme, row.negativeComments),
+      };
+    })
+    .sort((a, b) => b.score - a.score || b.negativeComments - a.negativeComments || a.theme.localeCompare(b.theme))
+    .slice(0, 8);
+}
+
+function themeRiskWeight(theme: string) {
+  const weights: Record<string, number> = {
+    Higiene: 35,
+    Validade: 35,
+    Carnes: 30,
+    Refrigeracao: 30,
+    "Controle de pragas": 30,
+    Seguranca: 25,
+    Frios: 20,
+    Acougue: 20,
+    "Divergencia de preco": 18,
+    Filas: 15,
+    Caixas: 15,
+    Preco: 12,
+  };
+  return weights[theme] ?? 8;
+}
+
+function decisionForTheme(theme: string, negativeComments: number) {
+  const prefix = negativeComments >= 2 ? "Abrir plano prioritario" : "Monitorar e validar evidencias";
+  const decisions: Record<string, string> = {
+    Higiene: "Auditar higiene, limpeza e controle de pragas com evidencia fotografica.",
+    Validade: "Auditar validade, temperatura e retirada de pereciveis improprios.",
+    Carnes: "Revisar cadeia fria, embalagem, lote e rotina do setor de carnes.",
+    Seguranca: "Revisar abordagem, cameras, ronda e registro de ocorrencias.",
+    Filas: "Rever escala, gatilho de abertura de caixas e tempo maximo de espera.",
+    Preco: "Auditar etiqueta, oferta, leitor e divergencia no caixa.",
+    Frios: "Revisar manipulacao, rotulagem e conferencia de entrega no balcao.",
+  };
+  return `${prefix}: ${decisions[theme] ?? "Definir responsavel, prazo e evidencia de conclusao."}`;
 }
 
 function actionScore(item: ActionPlanItem) {

@@ -67,6 +67,21 @@ describe("dashboard", () => {
     const dashboard = getDemoDashboard({});
 
     expect(new Set(dashboard.themes).size).toBe(dashboard.themes.length);
+    expect(dashboard.themes.filter((theme) => theme === "Validade")).toHaveLength(1);
+    expect(dashboard.themes.filter((theme) => theme === "Controle de pragas")).toHaveLength(1);
+  });
+
+  it("prioriza temas por comentarios negativos, volume e risco operacional", () => {
+    const dashboard = getDemoDashboard({});
+    const highPriorityThemes = dashboard.themeDecisionReport
+      .filter((item) => item.priority === "Alta")
+      .map((item) => item.theme);
+
+    expect(highPriorityThemes).toContain("Validade");
+    expect(dashboard.themeDecisionReport[0]?.score).toBeGreaterThanOrEqual(
+      dashboard.themeDecisionReport.at(-1)?.score ?? 0,
+    );
+    expect(dashboard.themeDecisionReport.every((item) => item.negativeComments >= 0)).toBe(true);
   });
 
   it("inclui avaliacoes de menor classificacao para Altiplano", () => {

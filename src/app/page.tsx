@@ -349,6 +349,48 @@ export default async function Home({
           </section>
 
           <section className="panel">
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold">Relatorio de tomada de decisao por tema</h2>
+                <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
+                  Prioridade calculada pelos dados acessados: comentarios negativos, quantidade de mencoes, lojas afetadas e risco operacional do tema.
+                </p>
+              </div>
+              <Badge tone="real">Dados acessados</Badge>
+            </div>
+            <div className="overflow-x-auto rounded-md border border-slate-200">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Tema</th>
+                    <th>Prioridade</th>
+                    <th>Score</th>
+                    <th>Negativos</th>
+                    <th>Mencoes</th>
+                    <th>Lojas</th>
+                    <th>Decisao recomendada</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dashboard.themeDecisionReport.map((item) => (
+                    <tr key={item.theme}>
+                      <td className="font-semibold text-slate-950">{item.theme}</td>
+                      <td>
+                        <Badge tone={item.priority === "Alta" ? "real" : "neutral"}>{item.priority}</Badge>
+                      </td>
+                      <td>{item.score}</td>
+                      <td>{item.negativeComments}</td>
+                      <td>{item.mentions}</td>
+                      <td>{item.affectedStores}</td>
+                      <td className="min-w-[280px] text-sm leading-6 text-slate-700">{item.decision}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="panel">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="max-w-3xl">
                 <div className="mb-3 flex items-center gap-2">
