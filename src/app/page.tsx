@@ -584,6 +584,7 @@ function ReviewEvidencePanel({
               <RatingStars rating={review.rating} />
             </div>
             <p className="mt-2 text-sm leading-6 text-slate-600">{review.text}</p>
+            <p className="mt-2 text-xs text-slate-400">{review.relativePublishTimeDescription}</p>
           </article>
         ))}
         {reviewSamples.length === 0 && (
@@ -664,6 +665,7 @@ function ThemeDecisionTable({
                               <RatingStars rating={review.rating} small />
                             </div>
                             <p className="mt-1 text-xs leading-5 text-slate-600">{review.text}</p>
+                            <p className="mt-1 text-[0.625rem] text-slate-400">{review.relativePublishTimeDescription}</p>
                           </article>
                         ))}
                         {item.evidenceReviews.length === 0 && (
