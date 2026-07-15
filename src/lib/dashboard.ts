@@ -138,6 +138,14 @@ function themeDictionary() {
     ["geladeira", "Refrigeracao"],
     ["rato", "Controle de pragas"],
     ["recepcao", "Recepcao"],
+    ["sujo", "Limpeza"],
+    ["sujeira", "Limpeza"],
+    ["calcada", "Area externa"],
+    ["mofados", "Validade"],
+    ["promocao", "Promocoes"],
+    ["apresuntado", "Frios"],
+    ["fiambre", "Frios"],
+    ["charque", "Carnes"],
   ] as const;
 }
 

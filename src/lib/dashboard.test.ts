@@ -40,9 +40,9 @@ describe("dashboard", () => {
   it("filtra feedbacks simulados por ultima semana e tema", () => {
     const dashboard = getDemoDashboard({ period: "ultima-semana", theme: "Filas" });
 
-    expect(dashboard.weeklyFeedbacks).toHaveLength(1);
-    expect(dashboard.weeklyFeedbacks[0].theme).toBe("Filas");
-    expect(dashboard.weeklyFeedbacks[0].dataSource).toBe("DEMO_SIMULATED");
+    expect(dashboard.weeklyFeedbacks).toHaveLength(2);
+    expect(dashboard.weeklyFeedbacks.every((feedback) => feedback.theme === "Filas")).toBe(true);
+    expect(dashboard.weeklyFeedbacks.every((feedback) => feedback.dataSource === "DEMO_SIMULATED")).toBe(true);
   });
 
   it("filtra comentarios disponiveis por tema", () => {
@@ -81,6 +81,14 @@ describe("dashboard", () => {
     expect(dashboard.reviewSamples.some((review) => review.rating <= 2)).toBe(true);
     expect(dashboard.reviewSamples.some((review) => review.text.toLowerCase().includes("acougue"))).toBe(true);
     expect(dashboard.reviewSamples.some((review) => review.text.toLowerCase().includes("vencido"))).toBe(true);
+  });
+
+  it("inclui avaliacoes de baixa classificacao para Torre", () => {
+    const dashboard = getDemoDashboard({ store: "torre" });
+
+    expect(dashboard.reviewSamples.some((review) => review.rating <= 2)).toBe(true);
+    expect(dashboard.reviewSamples.some((review) => review.text.toLowerCase().includes("fila"))).toBe(true);
+    expect(dashboard.reviewSamples.some((review) => review.text.toLowerCase().includes("mofados"))).toBe(true);
   });
 
   it("altera serie do grafico por periodo", () => {
