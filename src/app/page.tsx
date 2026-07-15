@@ -103,6 +103,12 @@ export default async function Home({
               stores={dashboard.filters.stores}
               themes={dashboard.filters.themes}
             />
+            {dashboard.periodStatus.selected && (
+              <div className="mt-4 flex flex-wrap items-start justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
+                <p className="max-w-4xl leading-6">{dashboard.periodStatus.message}</p>
+                <Badge tone="authorized">Periodo real apos autorizacao</Badge>
+              </div>
+            )}
           </section>
 
           <TabNavigation activeTab={activeTab} params={params} />
@@ -292,7 +298,7 @@ export default async function Home({
                       <div>
                         <h2 className="text-xl font-semibold">Evolucao por periodo</h2>
                         <p className="mt-1 text-sm leading-6 text-slate-600">
-                          Sem datas completas nao exibimos grafico semanal, mensal ou anual real.
+                          Sem datas completas nao aplicamos filtro de ultima semana nem exibimos grafico semanal, mensal ou anual real.
                         </p>
                       </div>
                       <Badge tone="authorized">Apos autorizacao</Badge>

@@ -35,6 +35,7 @@ export function getDemoDashboard(filters: {
   const filteredReviewSamples = filters.reviewTone === "negativas"
     ? reviewSamples.filter((review) => review.rating <= 2)
     : reviewSamples;
+  const periodStatus = buildPeriodStatus(filters.period, availableReviews);
   const weeklyFeedbacks = simulatedWeeklyFeedbacks.filter((feedback) => {
     if (filters.store && feedback.storeId !== filters.store) return false;
     if (filters.period && feedback.period !== filters.period) return false;
@@ -74,6 +75,7 @@ export function getDemoDashboard(filters: {
         ...simulatedActionPlan.map((item) => item.theme),
       ]),
     },
+    periodStatus,
     summary: {
       unitsFound: stores.length,
       weightedAverageRating,
@@ -81,6 +83,20 @@ export function getDemoDashboard(filters: {
       bestRated,
       mostReviewed,
     },
+  };
+}
+
+function buildPeriodStatus(period: string | undefined, reviews: PublicReviewSample[]) {
+  const hasDatedReviews = reviews.some((review) => Boolean(review.publishTime));
+  const selected = period === "ultima-semana";
+
+  return {
+    applied: selected && hasDatedReviews,
+    hasDatedReviews,
+    selected,
+    message: selected && !hasDatedReviews
+      ? "O filtro Ultima semana nao foi aplicado aos indicadores porque os comentarios acessados nao possuem datas completas e auditaveis. Use Google Business Profile autorizado ou importacao oficial para calcular periodo real."
+      : "Historico acessado sem recorte semanal real.",
   };
 }
 

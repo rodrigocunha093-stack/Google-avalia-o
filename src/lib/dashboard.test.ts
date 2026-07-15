@@ -45,6 +45,14 @@ describe("dashboard", () => {
     expect(dashboard.weeklyFeedbacks.every((feedback) => feedback.dataSource === "DEMO_SIMULATED")).toBe(true);
   });
 
+  it("nao aplica periodo semanal real sem datas oficiais nos comentarios acessados", () => {
+    const dashboard = getDemoDashboard({ period: "ultima-semana" });
+
+    expect(dashboard.periodStatus.selected).toBe(true);
+    expect(dashboard.periodStatus.applied).toBe(false);
+    expect(dashboard.periodStatus.message).toContain("nao foi aplicado");
+  });
+
   it("monta uma central de acao com fila priorizada", () => {
     const dashboard = getDemoDashboard({});
     const queueThemes = dashboard.actionCommandCenter.actionQueue.map((item) => item.theme);

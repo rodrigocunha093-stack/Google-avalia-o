@@ -51,9 +51,9 @@ export function StoreFilters({
           <option key={status} value={status}>{status}</option>
         ))}
       </Select>
-      <Select label="Periodo" name="period" onChange={update} value={searchParams.get("period") ?? ""}>
-        <option value="">Historico publico disponivel</option>
-        <option value="ultima-semana">Ultima semana</option>
+      <Select label="Periodo dos comentarios" name="period" onChange={update} value={searchParams.get("period") ?? ""}>
+        <option value="">Historico acessado</option>
+        <option value="ultima-semana">Ultima semana (requer datas oficiais)</option>
       </Select>
       <Select label="Grafico de nota" name="ratingPeriod" onChange={update} value={searchParams.get("ratingPeriod") ?? ratingPeriod}>
         <option value="semanal">Semanal</option>
